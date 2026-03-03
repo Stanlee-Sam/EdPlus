@@ -65,7 +65,7 @@ model User {
   email    String @unique
   phone    String
   password String
-  role     Role
+  role     Role @default(PARENT)
 
   schoolId String?
   school   School? @relation(fields: [schoolId], references: [id])
