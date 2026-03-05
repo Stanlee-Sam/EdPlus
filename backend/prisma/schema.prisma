@@ -39,6 +39,7 @@ model School {
   location     String
   contactEmail String
   contactPhone String
+  isDeleted Boolean @default(false)
 
   users                User[]
   classes              Class[]
@@ -55,6 +56,7 @@ model School {
   notifications        Notification[]
   termSummaries        TermSummary[]
 
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

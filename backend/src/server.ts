@@ -5,6 +5,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import prismaPkg from "../generated/prisma/client.js";
 import userRoute from '../routes/usersRoutes.js'
+import schoolRoute from '../routes/schooleRoutes.js'
 import jwt from "jsonwebtoken";
 import type { Role } from "../generated/prisma/client.js";
 import { z } from "zod";
@@ -20,8 +21,10 @@ app.use(express.json());
 app.use(cors());
 
 
-//user routes
+//user route
 app.use("/users", userRoute);
+//school route
+app.use('/school', schoolRoute)
 
 
 app.listen(5000, () => {

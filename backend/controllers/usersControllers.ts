@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
 import "dotenv/config";
-import { PrismaPg } from "@prisma/adapter-pg";
 import jwt from "jsonwebtoken";
 import type { Role } from "../generated/prisma/client.js";
 import { z } from "zod";
 import type { Request, Response } from "express";
+import { PrismaPg } from "@prisma/adapter-pg";
 import prismaPkg from "../generated/prisma/client.js";
 
 const { PrismaClient } = prismaPkg;
