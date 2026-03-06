@@ -6,6 +6,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import prismaPkg from "../generated/prisma/client.js";
 import userRoute from '../routes/usersRoutes.js'
 import schoolRoute from '../routes/schooleRoutes.js'
+import classRoute from '../routes/classRoutes.js'
 import jwt from "jsonwebtoken";
 import type { Role } from "../generated/prisma/client.js";
 import { z } from "zod";
@@ -25,6 +26,8 @@ app.use(cors());
 app.use("/users", userRoute);
 //school route
 app.use('/school', schoolRoute)
+//class route
+app.use('/class', classRoute)
 
 
 app.listen(5000, () => {
