@@ -41,6 +41,20 @@ export const createClass = async (req: Request<{}, {}, unknown>, res: Response) 
     }
     const { name, classTeacherId, schoolId } = parsed.data;
 
+    const existingTeacher = await prisma.user.findFirst({
+      where: { id: classTeacherId },
+    });
+    if (!existingTeacher) {
+      return res.status(404).json({ message: "Teacher does not exist" });
+    }
+
+    const existingSchool = await prisma.school.findFirst({
+      where: { id: schoolId, isDeleted: false },
+    });
+    if (!existingSchool) {
+      return res.status(404).json({ message: "School does not exist" });
+    }
+
     const newClass = await prisma.class.create({
       data: {
         name,
@@ -84,6 +98,21 @@ export const updateClass = async (
 
     if (!existingClass) {
       return res.status(404).json({ message: "Class does not exist" });
+    }
+
+    
+    const existingTeacher = await prisma.user.findFirst({
+      where: { id: classTeacherId},
+    });
+    if (!existingTeacher) {
+      return res.status(404).json({ message: "Teacher does not exist" });
+    }
+
+    const existingSchool = await prisma.school.findFirst({
+      where: { id: schoolId, isDeleted: false },
+    });
+    if (!existingSchool) {
+      return res.status(404).json({ message: "School does not exist" });
     }
 
     const updatedClass = await prisma.class.update({
