@@ -4,6 +4,7 @@ import userRoute from "../routes/usersRoutes.js";
 import schoolRoute from "../routes/schooleRoutes.js";
 import classRoute from "../routes/classRoutes.js";
 import studentRoute from "../routes/studentRoutes.js";
+import attendanceRoute from "../routes/attendanceRoute.js";
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use("/school", schoolRoute);
 app.use("/class", classRoute);
 //student route
 app.use("/student", studentRoute);
+//attendance route
+app.use("/attendance", attendanceRoute);
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");

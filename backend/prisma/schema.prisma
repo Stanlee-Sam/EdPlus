@@ -241,7 +241,9 @@ model Attendance {
   term       Term             @relation(fields: [termId], references: [id])
   schoolId   String
   school     School           @relation(fields: [schoolId], references: [id])
+  isDeleted  Boolean @default(false)
 
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
