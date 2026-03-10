@@ -196,6 +196,8 @@ model Homework {
   title       String
   description String
   dueDate     DateTime
+  status     HomeworkStatus @default(incomplete)
+  isDeleted   Boolean @default(false)
 
   classId   String
   class     Class   @relation(fields: [classId], references: [id])
@@ -210,6 +212,7 @@ model Homework {
 
   submissions HomeworkSubmission[]
 
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

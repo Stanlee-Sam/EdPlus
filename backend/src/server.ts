@@ -5,22 +5,25 @@ import schoolRoute from "../routes/schooleRoutes.js";
 import classRoute from "../routes/classRoutes.js";
 import studentRoute from "../routes/studentRoutes.js";
 import attendanceRoute from "../routes/attendanceRoute.js";
+import homeworkRoute from "../routes/homeworkRoute.js";
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 
-//user route
+//user endpoint
 app.use("/users", userRoute);
-//school route
+//school endpoint
 app.use("/school", schoolRoute);
-//class route
+//class endpoint
 app.use("/class", classRoute);
-//student route
+//student endpoint
 app.use("/student", studentRoute);
-//attendance route
+//attendance endpoint
 app.use("/attendance", attendanceRoute);
+//homework endpoint
+app.use("/homework", homeworkRoute);
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
