@@ -6,7 +6,7 @@ const router = express.Router()
 router.get('/', getHomework)
 router.post('/', createHomework)
 router.put('/:id', editHomework)
-router.put('/status/:id', ParentEditHomework)
+router.put('/status', ParentEditHomework)
 router.delete('/:id', deleteHomework)
 
 

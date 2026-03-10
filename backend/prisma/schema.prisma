@@ -33,6 +33,12 @@ enum Grade {
   E
 }
 
+enum PaymentMethod {
+  CASH
+  MPESA
+  BANK
+}
+
 model School {
   id           String @id @default(uuid())
   name         String
@@ -169,6 +175,8 @@ model TeacherClassSubject {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([teacherId, classId, subjectId])
 }
 
 model Term {
@@ -196,7 +204,6 @@ model Homework {
   title       String
   description String
   dueDate     DateTime
-  status     HomeworkStatus @default(incomplete)
   isDeleted   Boolean @default(false)
 
   classId   String
@@ -223,8 +230,8 @@ model HomeworkSubmission {
   homework   Homework       @relation(fields: [homeworkId], references: [id])
   studentId  String
   student    Student        @relation(fields: [studentId], references: [id])
-  status     HomeworkStatus
-  markedAt   DateTime
+  status     HomeworkStatus @default(incomplete)
+  markedAt   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -331,7 +338,7 @@ model Payment {
   id           String   @id @default(uuid())
   amount       Int
   date         DateTime
-  method       String
+  method       PaymentMethod
   recordedBy   String
   financeAdmin User     @relation(fields: [recordedBy], references: [id])
 
@@ -365,7 +372,7 @@ model Announcement {
 model Notification {
   id      String  @id @default(uuid())
   message String
-  isRead  Boolean
+  isRead  Boolean @default(false)
 
   userId   String
   user     User   @relation(fields: [userId], references: [id])
