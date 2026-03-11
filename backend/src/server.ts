@@ -7,6 +7,7 @@ import studentRoute from "../routes/studentRoutes.js";
 import attendanceRoute from "../routes/attendanceRoute.js";
 import homeworkRoute from "../routes/homeworkRoute.js";
 import subjectRoute from "../routes/subjectRoutes.js";
+import TCSRoute from "../routes/TeacherClassSubjectRoute.js";
 
 const app = express();
 
@@ -27,6 +28,8 @@ app.use("/attendance", attendanceRoute);
 app.use("/homework", homeworkRoute);
 //subject enpoint
 app.use("/subject", subjectRoute);
+//TCS endpoint
+app.use('/tcs', TCSRoute)
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
