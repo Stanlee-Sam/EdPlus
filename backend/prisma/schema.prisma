@@ -151,11 +151,13 @@ model Subject {
   name     String
   schoolId String
   school   School @relation(fields: [schoolId], references: [id])
+  isDeleted Boolean @default(false)
 
   homework             Homework[]
   teacherClassSubjects TeacherClassSubject[]
   results              Result[]
 
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -170,9 +172,12 @@ model TeacherClassSubject {
   subject   Subject @relation(fields: [subjectId], references: [id])
   schoolId  String
   school    School  @relation(fields: [schoolId], references: [id])
+  isDeleted Boolean @default(false)
+
 
   results Result[]
 
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
