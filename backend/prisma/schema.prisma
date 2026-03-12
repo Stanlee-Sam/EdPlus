@@ -269,6 +269,7 @@ model Result {
   id    String @id @default(uuid())
   score Int
   grade Grade
+  isDeleted Boolean @default(false)
 
   studentId              String
   student                Student             @relation(fields: [studentId], references: [id])
@@ -276,19 +277,21 @@ model Result {
   term                   Term                @relation(fields: [termId], references: [id])
   schoolId               String
   school                 School              @relation(fields: [schoolId], references: [id])
-  teachersClassSubjectId String
-  teachersClassSubject   TeacherClassSubject @relation(fields: [teachersClassSubjectId], references: [id])
+  teacherClassSubjectId String
+  teacherClassSubject   TeacherClassSubject @relation(fields: [teacherClassSubjectId], references: [id])
   subjectId              String
   subject                Subject             @relation(fields: [subjectId], references: [id])
 
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([studentId, termId, teachersClassSubjectId])
+  @@unique([studentId, termId, teacherClassSubjectId])
 }
 
 model TermSummary {
   id String @id @default(uuid())
+  isDeleted Boolean @default(false)
 
   studentId String
   student   Student @relation(fields: [studentId], references: [id])
@@ -303,6 +306,7 @@ model TermSummary {
   schoolId String
   school   School @relation(fields: [schoolId], references: [id])
 
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

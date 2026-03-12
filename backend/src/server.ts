@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import cors from "cors";
 import userRoute from "../routes/usersRoutes.js";
 import schoolRoute from "../routes/schooleRoutes.js";
@@ -8,6 +8,7 @@ import attendanceRoute from "../routes/attendanceRoute.js";
 import homeworkRoute from "../routes/homeworkRoute.js";
 import subjectRoute from "../routes/subjectRoutes.js";
 import TCSRoute from "../routes/TeacherClassSubjectRoute.js";
+import resultRoute from "../routes/resultsRoute.js"
 
 const app = express();
 
@@ -30,6 +31,8 @@ app.use("/homework", homeworkRoute);
 app.use("/subject", subjectRoute);
 //TCS endpoint
 app.use('/tcs', TCSRoute)
+//result endpoint
+app.use('/results', resultRoute)
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
