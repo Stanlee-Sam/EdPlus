@@ -1,8 +1,7 @@
 import { z } from "zod";
 import type { Request, Response } from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
-import prismaPkg, { Prisma } from "../generated/prisma/client.js";
-import { AttendanceStatus } from "../generated/prisma/client.js";
+import prismaPkg, { AttendanceStatus, Prisma } from "../generated/prisma/client.js";
 
 const { PrismaClient } = prismaPkg;
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });

@@ -189,6 +189,7 @@ model Term {
   name      String
   startDate DateTime
   endDate   DateTime
+  isDeleted Boolean @default(false)
 
   schoolId String
   school   School @relation(fields: [schoolId], references: [id])
@@ -200,6 +201,7 @@ model Term {
   payments      Payment[]
   termSummaries TermSummary[]
 
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
