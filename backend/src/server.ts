@@ -11,6 +11,7 @@ import TCSRoute from "../routes/TeacherClassSubjectRoute.js";
 import resultRoute from "../routes/resultsRoute.js";
 import termRoute from '../routes/termRoutes.js'
 import termSummaryRoute from '../routes/termSummaryRoutes.js'
+import announcementRoute from '../routes/announcementRoutes.js'
 
 const app = express();
 
@@ -39,6 +40,8 @@ app.use('/results', resultRoute)
 app.use('/termSummary', termSummaryRoute)
 //term endpoint
 app.use('/term', termRoute)
+//announcement endpoint
+app.use('/announcement', announcementRoute)
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
