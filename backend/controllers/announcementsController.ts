@@ -1,8 +1,7 @@
 import { z } from "zod";
 import type { Request, Response } from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
-import prismaPkg, { Prisma } from "../generated/prisma/client.js";
-import { parse } from "node:path";
+import prismaPkg from "../generated/prisma/client.js";
 
 const { PrismaClient } = prismaPkg;
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
@@ -13,17 +12,17 @@ const announcementIdSchema = z.string().uuid();
 const schoolIdSchema = z.string().uuid();
 const classIdSchema = z.string().uuid();
 
-const annoucementSchema = z.object({
+const announcementSchema = z.object({
   title: z.string(),
   content: z.string(),
   createdBy: z.string().uuid(),
-  classId: z.string().uuid(),
+  classId: z.string().uuid().optional(),
   schoolId: z.string().uuid(),
 });
 
 export const createAnnouncement = async (req: Request, res: Response) => {
   try {
-    const parsed = annoucementSchema.safeParse(req.body);
+    const parsed = announcementSchema.safeParse(req.body);
 
     if (!parsed.success) {
       return res.status(400).json({
@@ -62,22 +61,24 @@ export const createAnnouncement = async (req: Request, res: Response) => {
       });
     }
 
-    const existingClass = await prisma.class.findFirst({
-      where: {
-        id: classId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingClass) {
-      return res.status(400).json({
-        message: "Class does not exist",
+    if (classId) {
+      const existingClass = await prisma.class.findFirst({
+        where: {
+          id: classId,
+          isDeleted: false,
+        },
       });
+
+      if (!existingClass) {
+        return res.status(400).json({
+          message: "Class does not exist",
+        });
+      }
     }
 
     const existingSchool = await prisma.school.findFirst({
       where: {
-        id: createdBy,
+        id: schoolId,
         isDeleted: false,
       },
     });
@@ -162,7 +163,7 @@ export const getSchoolAnnouncement = async (
   try {
     const schoolIdParsed = schoolIdSchema.safeParse(req.params.id);
 
-    if (!schoolIdParsed) {
+    if (!schoolIdParsed.success) {
       return res.status(400).json({
         message: "Invalid school ID",
       });
@@ -211,7 +212,7 @@ export const getClassAnnouncement = async (
     const existingClass = await prisma.class.findFirst({
       where: {
         id: classId,
-        isDeleted: true,
+        isDeleted: false,
       },
     });
 
@@ -240,7 +241,7 @@ export const updateAnnouncement = async (
 ) => {
   try {
     const announcementIdParsed = announcementIdSchema.safeParse(req.params.id);
-    const parsed = annoucementSchema.safeParse(req.body);
+    const parsed = announcementSchema.safeParse(req.body);
 
     if (!announcementIdParsed.success) {
       return res.status(400).json({
@@ -282,22 +283,24 @@ export const updateAnnouncement = async (
       });
     }
 
-    const existingClass = await prisma.class.findFirst({
-      where: {
-        id: classId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingClass) {
-      return res.status(400).json({
-        message: "Class does not exist",
+    if (classId) {
+      const existingClass = await prisma.class.findFirst({
+        where: {
+          id: classId,
+          isDeleted: false,
+        },
       });
+
+      if (!existingClass) {
+        return res.status(400).json({
+          message: "Class does not exist",
+        });
+      }
     }
 
     const existingSchool = await prisma.school.findFirst({
       where: {
-        id: createdBy,
+        id: schoolId,
         isDeleted: false,
       },
     });
@@ -321,7 +324,7 @@ export const updateAnnouncement = async (
       },
     });
 
-    res.status(201).json({
+    res.status(200).json({
       message: "Announcement updated successfully",
       updatedAnnouncement,
     });
