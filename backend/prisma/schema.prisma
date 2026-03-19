@@ -340,6 +340,7 @@ model TermSummary {
 model FeeStructure {
   id     String @id @default(uuid())
   amount Int
+  isDeleted Boolean @default(false)
 
   levelId  String
   level    Level  @relation(fields: [levelId], references: [id])
@@ -350,6 +351,7 @@ model FeeStructure {
 
   feeItems FeeItem[]
 
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
