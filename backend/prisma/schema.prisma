@@ -49,6 +49,7 @@ model School {
 
   users                User[]
   classes              Class[]
+  levels               Level[]
   subjects             Subject[]
   students             Student[]
   terms                Term[]
@@ -99,16 +100,37 @@ model Class {
   schoolId       String
   school         School @relation(fields: [schoolId], references: [id])
   isDeleted   Boolean @default(false)
+  levelId     String
+  level       Level  @relation(fields: [levelId], references: [id])
 
   students      Student[]
   homework      Homework[]
-  feeStructures FeeStructure[]
   teachers      TeacherClassSubject[]
   announcements Announcement[]
 
   deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Level {
+  id       String @id @default(uuid())
+  name     String
+  order    Int
+  isDeleted Boolean @default(false)
+
+  schoolId String
+  school   School @relation(fields: [schoolId], references: [id])
+
+  classes       Class[]
+  feeStructures FeeStructure[]
+
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, name])
+  @@unique([schoolId, order])
 }
 
 model Student {
@@ -319,8 +341,8 @@ model FeeStructure {
   id     String @id @default(uuid())
   amount Int
 
-  classId  String
-  class    Class  @relation(fields: [classId], references: [id])
+  levelId  String
+  level    Level  @relation(fields: [levelId], references: [id])
   termId   String
   term     Term   @relation(fields: [termId], references: [id])
   schoolId String

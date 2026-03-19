@@ -13,6 +13,7 @@ const classSchema = z.object({
   name: string(),
   classTeacherId: string().uuid(),
   schoolId: string().uuid(),
+  levelId: string().uuid(),
 });
 
 export const getClasses = async (req: Request, res: Response) => {
@@ -30,7 +31,10 @@ export const getClasses = async (req: Request, res: Response) => {
   }
 };
 
-export const createClass = async (req: Request<{}, {}, unknown>, res: Response) => {
+export const createClass = async (
+  req: Request<{}, {}, unknown>,
+  res: Response,
+) => {
   try {
     const parsed = classSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -39,7 +43,7 @@ export const createClass = async (req: Request<{}, {}, unknown>, res: Response) 
         errors: parsed.error.flatten().fieldErrors,
       });
     }
-    const { name, classTeacherId, schoolId } = parsed.data;
+    const { name, classTeacherId, schoolId, levelId } = parsed.data;
 
     const existingTeacher = await prisma.user.findFirst({
       where: { id: classTeacherId },
@@ -55,11 +59,20 @@ export const createClass = async (req: Request<{}, {}, unknown>, res: Response) 
       return res.status(404).json({ message: "School does not exist" });
     }
 
+    const existingLevel = await prisma.level.findFirst({
+      where: { id: levelId, schoolId },
+    });
+
+    if (!existingLevel) {
+      return res.status(404).json({ message: "Level does not exist" });
+    }
+
     const newClass = await prisma.class.create({
       data: {
         name,
         classTeacherId,
         schoolId,
+        levelId,
       },
     });
     res.status(201).json({ message: "Class created successfully", newClass });
@@ -90,7 +103,7 @@ export const updateClass = async (
     }
 
     const classId = classIdParsed.data;
-    const { name, classTeacherId, schoolId } = parsed.data;
+    const { name, classTeacherId, schoolId, levelId } = parsed.data;
 
     const existingClass = await prisma.class.findFirst({
       where: { id: classId, isDeleted: false },
@@ -100,9 +113,8 @@ export const updateClass = async (
       return res.status(404).json({ message: "Class does not exist" });
     }
 
-    
     const existingTeacher = await prisma.user.findFirst({
-      where: { id: classTeacherId},
+      where: { id: classTeacherId },
     });
     if (!existingTeacher) {
       return res.status(404).json({ message: "Teacher does not exist" });
@@ -115,12 +127,21 @@ export const updateClass = async (
       return res.status(404).json({ message: "School does not exist" });
     }
 
+    const existingLevel = await prisma.level.findFirst({
+      where: { id: levelId, schoolId },
+    });
+
+    if (!existingLevel) {
+      return res.status(404).json({ message: "Level does not exist" });
+    }
+
     const updatedClass = await prisma.class.update({
       where: { id: classId },
       data: {
         name,
         classTeacherId,
         schoolId,
+        levelId,
       },
     });
 

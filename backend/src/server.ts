@@ -13,6 +13,7 @@ import termRoute from '../routes/termRoutes.js'
 import termSummaryRoute from '../routes/termSummaryRoutes.js'
 import announcementRoute from '../routes/announcementRoutes.js'
 import notificationRoute from '../routes/notificationRoute.js'
+import levelRoute from '../routes/levelRoutes.js'
 
 const app = express();
 
@@ -45,6 +46,9 @@ app.use('/term', termRoute)
 app.use('/announcement', announcementRoute)
 //notification endpoint
 app.use('/notification', notificationRoute)
+//level endpoint
+app.use('/level', levelRoute)
+
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
