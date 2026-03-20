@@ -15,6 +15,7 @@ import announcementRoute from '../routes/announcementRoutes.js'
 import notificationRoute from '../routes/notificationRoute.js'
 import levelRoute from '../routes/levelRoutes.js'
 import feeStructureRoute from '../routes/feeStructureRoutes.js'
+import feeItemRoute from '../routes/feeItemRoutes.js'
 
 const app = express();
 
@@ -51,6 +52,8 @@ app.use('/notification', notificationRoute)
 app.use('/level', levelRoute)
 //fee structure endpoint
 app.use('/feeStructure', feeStructureRoute)
+//fee item endpoint
+app.use('/feeItem', feeItemRoute)
 
 
 app.listen(5000, () => {
