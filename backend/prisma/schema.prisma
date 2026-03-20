@@ -378,6 +378,7 @@ model Payment {
   method       PaymentMethod
   recordedBy   String
   financeAdmin User     @relation(fields: [recordedBy], references: [id])
+  isDeleted Boolean @default(false)
 
   studentId String
   student   Student @relation(fields: [studentId], references: [id])
@@ -386,6 +387,7 @@ model Payment {
   schoolId  String
   school    School  @relation(fields: [schoolId], references: [id])
 
+  deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

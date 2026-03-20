@@ -48,7 +48,7 @@ export const createTerm = async (req: Request, res: Response) => {
     });
 
     if (!existingSchool) {
-      return res.status(400).json({ message: "School does not exist" });
+      return res.status(404).json({ message: "School does not exist" });
     }
 
     const newTerm = await prisma.term.create({

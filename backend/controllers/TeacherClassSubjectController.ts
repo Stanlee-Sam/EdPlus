@@ -187,7 +187,7 @@ export const updateTCS = async (
     });
 
     if (!existingTCS) {
-      return res.status(400).json({ message: "TCS does not exist" });
+      return res.status(404).json({ message: "TCS does not exist" });
     }
 
     const existingSchool = await prisma.school.findFirst({

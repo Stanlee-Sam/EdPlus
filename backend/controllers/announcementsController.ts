@@ -56,7 +56,7 @@ export const createAnnouncement = async (req: Request, res: Response) => {
     });
 
     if (!existingUser) {
-      return res.status(400).json({
+      return res.status(404).json({
         message: "User does not exist",
       });
     }
@@ -70,7 +70,7 @@ export const createAnnouncement = async (req: Request, res: Response) => {
       });
 
       if (!existingClass) {
-        return res.status(400).json({
+        return res.status(404).json({
           message: "Class does not exist",
         });
       }
@@ -84,7 +84,7 @@ export const createAnnouncement = async (req: Request, res: Response) => {
     });
 
     if (!existingSchool) {
-      return res.status(400).json({
+      return res.status(404).json({
         message: "School does not exist",
       });
     }
@@ -278,7 +278,7 @@ export const updateAnnouncement = async (
     });
 
     if (!existingUser) {
-      return res.status(400).json({
+      return res.status(404).json({
         message: "User does not exist",
       });
     }
@@ -292,7 +292,7 @@ export const updateAnnouncement = async (
       });
 
       if (!existingClass) {
-        return res.status(400).json({
+        return res.status(404).json({
           message: "Class does not exist",
         });
       }
@@ -306,7 +306,7 @@ export const updateAnnouncement = async (
     });
 
     if (!existingSchool) {
-      return res.status(400).json({
+      return res.status(404).json({
         message: "School does not exist",
       });
     }
