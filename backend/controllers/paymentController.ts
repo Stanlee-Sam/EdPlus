@@ -1,9 +1,9 @@
 import { coerce, z } from "zod";
 import type { Request, Response } from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
-import prismaPkg, { PaymentMethod } from "../generated/prisma/client.js";
+import * as prismaPkg from "../generated/prisma/client.js";
 
-const { PrismaClient } = prismaPkg;
+const PrismaClient = (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const prisma = new PrismaClient({ adapter });
@@ -53,7 +53,6 @@ export const createPayment = async (req: Request, res: Response) => {
     const existingFinanceAdmin = await prisma.user.findFirst({
       where: {
         id: recordedBy,
-        isDeleted: false,
       },
     });
 
@@ -99,10 +98,18 @@ export const createPayment = async (req: Request, res: Response) => {
         amount,
         date,
         method,
-        recordedBy,
-        studentId,
-        termId,
-        schoolId,
+        financeAdmin: {
+          connect: { id: recordedBy },
+        },
+        student: {
+          connect: { id: studentId },
+        },
+        term: {
+          connect: { id: termId },
+        },
+        school: {
+          connect: { id: schoolId },
+        },
       },
     });
 
@@ -323,7 +330,6 @@ export const updatePayment = async (
     const existingFinanceAdmin = await prisma.user.findFirst({
       where: {
         id: recordedBy,
-        isDeleted: false,
       },
     });
 
@@ -372,10 +378,18 @@ export const updatePayment = async (
         amount,
         date,
         method,
-        recordedBy,
-        studentId,
-        termId,
-        schoolId,
+        financeAdmin: {
+          connect: { id: recordedBy },
+        },
+        student: {
+          connect: { id: studentId },
+        },
+        term: {
+          connect: { id: termId },
+        },
+        school: {
+          connect: { id: schoolId },
+        },
       },
     });
 

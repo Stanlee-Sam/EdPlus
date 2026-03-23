@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  createPayment,
   getPayment,
   getPayments,
   getSchoolPayment,
@@ -11,6 +12,7 @@ import {
 
 const router = express.Router();
 
+router.post("/", createPayment);
 router.get("/", getPayments);
 router.get("/school/:id", getSchoolPayment);
 router.get("/student/:id", getStudentPayment);

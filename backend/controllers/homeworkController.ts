@@ -1,12 +1,14 @@
 import { z } from "zod";
 import type { Request, Response } from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
-import prismaPkg, {
-  HomeworkStatus,
-  Prisma,
-} from "../generated/prisma/client.js";
+import * as prismaPkg from "../generated/prisma/client.js";
 
-const { PrismaClient } = prismaPkg;
+const PrismaClient = (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
+const HomeworkStatus =
+  (prismaPkg as any).HomeworkStatus ??
+  (prismaPkg as any).default?.HomeworkStatus;
+const Prisma =
+  (prismaPkg as any).Prisma ?? (prismaPkg as any).default?.Prisma;
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const prisma = new PrismaClient({ adapter });
@@ -205,6 +207,7 @@ export const ParentEditHomework = async (
         where: {
           homeworkId,
           studentId,
+          isDeleted: false,
         },
       });
 

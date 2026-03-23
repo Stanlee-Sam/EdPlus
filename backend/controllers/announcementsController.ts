@@ -3,7 +3,7 @@ import type { Request, Response } from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
 import prismaPkg from "../generated/prisma/client.js";
 
-const { PrismaClient } = prismaPkg;
+const PrismaClient = (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const prisma = new PrismaClient({ adapter });
@@ -40,6 +40,7 @@ export const createAnnouncement = async (req: Request, res: Response) => {
         createdBy,
         classId,
         schoolId,
+        isDeleted: false,
       },
     });
 
@@ -112,7 +113,11 @@ export const createAnnouncement = async (req: Request, res: Response) => {
 
 export const getAnnouncements = async (req: Request, res: Response) => {
   try {
-    const announcements = await prisma.announcement.findMany();
+    const announcements = await prisma.announcement.findMany({
+      where: {
+        isDeleted: false,
+      },
+    });
     res.status(200).json(announcements);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Uknown error";
@@ -139,6 +144,7 @@ export const getAnnouncement = async (
     const announcement = await prisma.announcement.findFirst({
       where: {
         id: announcementId,
+        isDeleted: false,
       },
     });
 
@@ -186,6 +192,7 @@ export const getSchoolAnnouncement = async (
     const schoolAnnouncements = await prisma.announcement.findMany({
       where: {
         schoolId,
+        isDeleted: false,
       },
     });
 
@@ -225,6 +232,7 @@ export const getClassAnnouncement = async (
     const classAnnouncements = await prisma.announcement.findMany({
       where: {
         classId,
+        isDeleted: false,
       },
     });
 
@@ -262,6 +270,7 @@ export const updateAnnouncement = async (
     const existingAnnouncement = await prisma.announcement.findFirst({
       where: {
         id: announcementId,
+        isDeleted: false,
       },
     });
 
@@ -352,6 +361,7 @@ export const deleteAnnouncement = async (
     const existingAnnouncement = await prisma.announcement.findFirst({
       where: {
         id: announcementId,
+        isDeleted: false,
       },
     });
 
@@ -361,9 +371,13 @@ export const deleteAnnouncement = async (
       });
     }
 
-    await prisma.announcement.delete({
+    await prisma.announcement.update({
       where: {
         id: announcementId,
+      },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
       },
     });
 

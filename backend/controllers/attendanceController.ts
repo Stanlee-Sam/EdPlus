@@ -1,9 +1,14 @@
 import { z } from "zod";
 import type { Request, Response } from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
-import prismaPkg, { AttendanceStatus, Prisma } from "../generated/prisma/client.js";
+import * as prismaPkg from "../generated/prisma/client.js";
 
-const { PrismaClient } = prismaPkg;
+const PrismaClient =
+  (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
+const AttendanceStatus =
+  (prismaPkg as any).AttendanceStatus ??
+  (prismaPkg as any).default?.AttendanceStatus;
+const Prisma = (prismaPkg as any).Prisma ?? (prismaPkg as any).default?.Prisma;
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const prisma = new PrismaClient({ adapter });
@@ -18,7 +23,6 @@ const attendanceSchema = z.object({
   schoolId: z.string().uuid(),
 });
 const studentIdSchema = z.string().uuid();
-
 
 export const createAttendance = async (
   req: Request<{}, {}, unknown>,
@@ -158,15 +162,6 @@ export const updateAttendance = async (
 
     res.status(200).json(updatedAttendance);
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      return res.status(409).json({
-        message: "Attendance already exists for this student, date and term",
-      });
-    }
-
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error updating attendance", message);
     res.status(500).json({ message });
@@ -215,97 +210,95 @@ export const deleteAttendance = async (
   }
 };
 
-export const getAttendance = async (req : Request, res : Response) => {
-    try {
-        const attendanceRecords = await prisma.attendance.findMany({
-            where: {
-                isDeleted: false,
-            },
-            select : {
-                id : true,
-                studentId : true,
-                date : true,
-                status : true,
-                recordedBy : true,
-                termId : true,
-                schoolId : true,
-                createdAt : true,
-                updatedAt : true,
+export const getAttendance = async (req: Request, res: Response) => {
+  try {
+    const attendanceRecords = await prisma.attendance.findMany({
+      where: {
+        isDeleted: false,
+      },
+      select: {
+        id: true,
+        studentId: true,
+        date: true,
+        status: true,
+        recordedBy: true,
+        termId: true,
+        schoolId: true,
+        createdAt: true,
+        updatedAt: true,
 
-                student : {
-                    select : {
-                        id : true,
-                        name : true,
-                        admissionNumber : true,
-                    }
-                }
-            }
-        })
+        student: {
+          select: {
+            id: true,
+            name: true,
+            admissionNumber: true,
+          },
+        },
+      },
+    });
 
-        res.status(200).json(attendanceRecords)
-        
-    } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown Error";
-        console.error("Error fetching attendance", message);
-        res.status(500).json({ message });
+    res.status(200).json(attendanceRecords);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown Error";
+    console.error("Error fetching attendance", message);
+    res.status(500).json({ message });
+  }
+};
+
+export const getAttendancePerStudent = async (
+  req: Request<{ id: string }, {}, unknown>,
+  res: Response,
+) => {
+  try {
+    const studentIdParsed = studentIdSchema.safeParse(req.params.id);
+
+    if (!studentIdParsed.success) {
+      return res.status(400).json({ message: "Invalid student ID" });
     }
-}
 
-export const getAttendancePerStudent = async (req : Request< { id : string }, {}, unknown>, res : Response) => {
-    try {
+    const studentId = studentIdParsed.data;
 
-        const studentIdParsed = studentIdSchema.safeParse(req.params.id);
+    const student = await prisma.student.findFirst({
+      where: {
+        id: studentId,
+        isDeleted: false,
+      },
+    });
 
-        if (!studentIdParsed.success) {
-            return res.status(400).json({ message: "Invalid student ID" });
-        }
-
-        const studentId = studentIdParsed.data;
-
-        const student = await prisma.student.findFirst({
-            where : {
-                id : studentId,
-                isDeleted : false
-            },
-
-        })
-
-        if (!student) {
-            return res.status(404).json({ message: "Student does not exist" });
-        }
-        
-        const studentAttendanceRecord = await prisma.attendance.findMany({
-            where : {
-                studentId,
-                isDeleted : false
-            },
-            select : {
-                id : true,
-                studentId : true,
-                date : true,
-                status : true,
-                recordedBy : true,
-                termId : true,
-                schoolId : true,
-                createdAt : true,
-                updatedAt : true,
-
-                student : {
-                    select : {
-                        id : true,
-                        name : true,
-                        admissionNumber : true
-                    }
-                }
-
-            }
-        })
-
-        res.status(200).json(studentAttendanceRecord)
-        
-    } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown Error";
-        console.error("Error fetching attendance for this student", message);
-        res.status(500).json({ message });
+    if (!student) {
+      return res.status(404).json({ message: "Student does not exist" });
     }
-}
+
+    const studentAttendanceRecord = await prisma.attendance.findMany({
+      where: {
+        studentId,
+        isDeleted: false,
+      },
+      select: {
+        id: true,
+        studentId: true,
+        date: true,
+        status: true,
+        recordedBy: true,
+        termId: true,
+        schoolId: true,
+        createdAt: true,
+        updatedAt: true,
+
+        student: {
+          select: {
+            id: true,
+            name: true,
+            admissionNumber: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json(studentAttendanceRecord);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown Error";
+    console.error("Error fetching attendance for this student", message);
+    res.status(500).json({ message });
+  }
+};

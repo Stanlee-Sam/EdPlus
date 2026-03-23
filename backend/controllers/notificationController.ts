@@ -3,7 +3,7 @@ import type { Request, Response } from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
 import prismaPkg from "../generated/prisma/client.js";
 
-const { PrismaClient } = prismaPkg;
+const PrismaClient = (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const prisma = new PrismaClient({ adapter });
@@ -77,7 +77,11 @@ export const createNotification = async (req: Request, res: Response) => {
 };
 export const getNotifications = async (req: Request, res: Response) => {
   try {
-    const notifications = await prisma.notification.findMany();
+    const notifications = await prisma.notification.findMany({
+      where: {
+        isDeleted: false,
+      },
+    });
     res.status(200).json(notifications);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Uknown error";
@@ -103,6 +107,7 @@ export const getNotification = async (
     const notification = await prisma.notification.findFirst({
       where: {
         id: notificationId,
+        isDeleted: false,
       },
     });
 
@@ -149,6 +154,7 @@ export const getUserNotifications = async (
     const userNotifications = await prisma.notification.findMany({
       where: {
         userId,
+        isDeleted: false,
       },
     });
 
@@ -185,6 +191,7 @@ export const updateNotification = async (
     const existingNotification = await prisma.notification.findFirst({
       where: {
         id: notificationId,
+        isDeleted: false,
       },
     });
 
@@ -235,6 +242,7 @@ export const markNotificationAsRead = async (req: Request, res: Response) => {
     const existingNotification = await prisma.notification.findFirst({
       where: {
         id: notificationId,
+        isDeleted: false,
       },
     });
 
@@ -278,6 +286,7 @@ export const deleteNotification = async (
     const existingNotification = await prisma.notification.findFirst({
       where: {
         id: notificationId,
+        isDeleted: false,
       },
     });
 
@@ -287,9 +296,13 @@ export const deleteNotification = async (
       });
     }
 
-    await prisma.notification.delete({
+    await prisma.notification.update({
       where: {
         id: notificationId,
+      },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
       },
     });
 
