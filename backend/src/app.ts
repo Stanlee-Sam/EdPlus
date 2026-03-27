@@ -21,7 +21,11 @@ import paymentRoute from "../routes/paymentRoutes.js";
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  methods : ['POST', 'GET', 'PUT', 'DELETE'],
+  origin : '*',
+  credentials : true
+}));
 
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });

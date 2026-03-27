@@ -92,7 +92,7 @@ export const createHomework = async (
     )
 
     await prisma.homeworkSubmission.createMany({
-        data : students.map((student) => ({
+        data : students.map((student : {id : string}) => ({
             studentId : student.id,
             homeworkId : newHomework.id,
             status : HomeworkStatus.incomplete
