@@ -4,14 +4,18 @@ import { useState } from "react";
 import { Mail } from "lucide-react";
 import { Lock } from "lucide-react";
 import { ArrowRight } from "lucide-react";
-const Login = () => {
+import { User } from "lucide-react";
+
+const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log({ email, password });
+    console.log({ name, email, password });
   };
+
   return (
     <div className="flex md:flex-row flex-col items-center justify-center gap-2 w-full min-h-screen">
       <div className="hidden md:flex flex-col gap-3 md:w-1/2 items-center justify-center">
@@ -21,7 +25,6 @@ const Login = () => {
             <div>
               <h3 className="text-foreground font-bold text-3xl">EdPlus</h3>
               <p className="text-muted-foreground text-sm">ACADEMIC ATELIER</p>
-
             </div>
           </div>
           <h1 className="text-6xl text-foreground font-bold w-full">
@@ -52,11 +55,26 @@ const Login = () => {
         >
           <div className="flex flex-col gap-3 pb-5">
             <h3 className=" text-foreground font-bold text-3xl">
-              Welcome Back
+              Create Account
             </h3>
             <p className="text-muted-foreground font-semibold">
-              Enter your credentials to access the atelier.
+              Join the Academic Atelier community today.{" "}
             </p>
+          </div>
+          <div className="grid gap-2 w-full relative">
+            <label className="text-sm/relaxed font-bold" htmlFor="name">
+              FULL NAME
+            </label>
+            <input
+              id="name"
+              placeholder="Full Name"
+              type="text"
+              value={name}
+              className="p-4 rounded-sm text-[18px] w-full border border-input bg-input outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 pl-12"
+              onChange={(event) => setName(event.target.value)}
+            />
+
+            <User className="absolute left-3 bottom-4 text-muted-foreground" />
           </div>
           <div className="grid gap-2 w-full relative">
             <label className="text-sm/relaxed font-bold" htmlFor="email">
@@ -93,16 +111,16 @@ const Login = () => {
             type="submit"
             className="w-full rounded-sm bg-primary px-4 py-4 text-[18px] font-bold text-primary-foreground transition-colors hover:bg-primary/80 cursor-pointer flex flex-row gap-3 items-center justify-center"
           >
-            <span>Sign In to EdPlus</span> <ArrowRight className="font-bold" />
+            <span>Create Account</span> <ArrowRight className="font-bold" />
           </button>
 
           <hr className="w-full border-t border-border my-7" />
 
           <div className="flex flex-col items-center justify-center w-full">
             <p className="">
-              Don't have an account?{" "}
-              <a href="/signup" className="text-primary">
-                Sign Up
+              Already have an account?{" "}
+              <a href="/login" className="text-primary">
+                Log in
               </a>
             </p>
           </div>
@@ -112,4 +130,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;
