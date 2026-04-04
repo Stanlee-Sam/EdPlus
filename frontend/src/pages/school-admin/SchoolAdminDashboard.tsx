@@ -11,12 +11,12 @@ const SchoolAdminDashboard = () => {
         <button
           type="button"
           onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 z-20 bg-black/30 md:hidden"
+          className="fixed inset-0 z-20 bg-black/30 lg:hidden"
           aria-label="Close sidebar"
         />
       ) : null}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-border/40 bg-card transition-transform duration-200 ease-out md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-border/40 bg-card transition-transform duration-200 ease-out lg:static lg:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
