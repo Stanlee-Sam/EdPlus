@@ -4,6 +4,10 @@ import Signup from "./pages/auth/Signup";
 import SuperAdminDashboard from "./pages/super-admin/SuperAdminDashboard";
 import SuperAdminSchools from "./pages/super-admin/SuperAdminSchools";
 import SuperAdminUsers from "./pages/super-admin/SuperAdminUsers";
+import Notifications, {
+  NotificationsIndex,
+  NotificationDetail,
+} from "./pages/Notifications";
 const App = () => {
   return (
     <Routes>
@@ -12,6 +16,10 @@ const App = () => {
       <Route path="/superadmin-dashboard" element={<SuperAdminDashboard />} />
       <Route path="/superadmin-schools" element={<SuperAdminSchools />} />
       <Route path="/superadmin-users" element={<SuperAdminUsers />} />
+      <Route path="/notifications" element={<Notifications />}>
+        <Route index element={<NotificationsIndex />} />
+        <Route path=":id" element={<NotificationDetail />} />
+      </Route>
       
       {/* <Route path="about" element={<About />} /> */}
     </Routes>

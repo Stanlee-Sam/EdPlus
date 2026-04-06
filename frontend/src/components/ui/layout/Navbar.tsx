@@ -30,7 +30,9 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
       </div>
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <ThemeToggle />
-        <Bell className="h-5 w-5 font-bold" />
+        <a href="/notifications">
+          <Bell className="h-5 w-5 font-bold" />
+        </a>
         <span className="h-10 w-px bg-border" aria-hidden="true" />{" "}
         <div className="flex flex-row gap-3 items-center">
           <div>
