@@ -59,7 +59,7 @@ const SuperAdminDashboard = () => {
                 </span>
               </div>
               <div className="bg-card p-6 flex flex-col gap-3 rounded-md items-start justify-center w-full md:w-[25%]">
-                <div className="bg-border p-2 rounded-sm ">
+                <div className="bg-primary p-2 rounded-sm ">
                   <Users />
                 </div>
                 <p className="font-semibold text-muted-foreground text-md">
