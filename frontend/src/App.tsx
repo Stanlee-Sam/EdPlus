@@ -8,6 +8,8 @@ import Notifications, {
   NotificationsIndex,
   NotificationDetail,
 } from "./pages/Notifications";
+import SchoolAdminAcademics from "./pages/school-admin/SchoolAdminAcademics";
+import SchoolAdminDashboard from "./pages/school-admin/SchoolAdminDashboard";
 const App = () => {
   return (
     <Routes>
@@ -20,7 +22,13 @@ const App = () => {
         <Route index element={<NotificationsIndex />} />
         <Route path=":id" element={<NotificationDetail />} />
       </Route>
-      
+      <Route path="/schooladmin-dashboard" element={<SchoolAdminDashboard />} />
+      <Route path="/schooladmin-academics" element={<SchoolAdminAcademics />} />
+      {/* <Route path="/schooladmin-financials" element={<SchoolAdminFinancials />} />
+      <Route path="/schooladmin-results" element={<SchoolAdminResults />} />
+      <Route path="/schooladmin-attendance" element={<SchoolAdminAttendance />} />
+      <Route path="/schooladmin-homework" element={<SchoolAdminHomework />} />
+      <Route path="/schooladmin-announcement" element={<SchoolAdminAnnouncement />} /> */}
       {/* <Route path="about" element={<About />} /> */}
     </Routes>
   )

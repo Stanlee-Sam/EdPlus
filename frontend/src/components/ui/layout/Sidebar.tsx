@@ -1,4 +1,10 @@
-import { LayoutDashboard } from "lucide-react";
+import {
+  Banknote,
+  Calendar,
+  FileText,
+  LayoutDashboard,
+  Megaphone,
+} from "lucide-react";
 import { GraduationCap } from "lucide-react";
 import { Users } from "lucide-react";
 import { ChartColumn } from "lucide-react";
@@ -35,27 +41,57 @@ const SIDEBAR_ITEMS: Record<
       icon: Settings,
     },
   ],
-  //   "school-admin": [
-  //     { label: "Overview", href: "/dashboard/school-admin" },
-  //     { label: "Staff", href: "/dashboard/school-admin/staff" },
-  //     { label: "Students", href: "/dashboard/school-admin/students" },
-  //     { label: "Classes", href: "/dashboard/school-admin/classes" },
-  //     { label: "Settings", href: "/dashboard/school-admin/settings" },
-  //   ],
-  //   teacher: [
-  //     { label: "Overview", href: "/dashboard/teacher" },
-  //     { label: "My Classes", href: "/dashboard/teacher/classes" },
-  //     { label: "Assignments", href: "/dashboard/teacher/assignments" },
-  //     { label: "Grades", href: "/dashboard/teacher/grades" },
-  //     { label: "Messages", href: "/dashboard/teacher/messages" },
-  //   ],
-  //   parent: [
-  //     { label: "Overview", href: "/dashboard/parent" },
-  //     { label: "My Children", href: "/dashboard/parent/children" },
-  //     { label: "Attendance", href: "/dashboard/parent/attendance" },
-  //     { label: "Fees", href: "/dashboard/parent/fees" },
-  //     { label: "Messages", href: "/dashboard/parent/messages" },
-  //   ],
+  "school-admin": [
+    {
+      label: "Overview",
+      href: "/schooladmin-dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Academics",
+      href: "/schooladmin-academics",
+      icon: GraduationCap,
+    },
+    {
+      label: "Financials",
+      href: "/schooladmin-financials",
+      icon: Banknote,
+    },
+    {
+      label: "Results",
+      href: "/schooladmin-results",
+      icon: ChartColumn,
+    },
+    {
+      label: "Attendance",
+      href: "/schooladmin-attendance",
+      icon: Calendar,
+    },
+    {
+      label: "Homework",
+      href: "/schooladmin-homework",
+      icon: FileText,
+    },
+    {
+      label: "Announcement",
+      href: "/schooladmin-announcement",
+      icon: Megaphone,
+    },
+  ],
+  // teacher: [
+  //   { label: "Overview", href: "/dashboard/teacher" },
+  //   { label: "My Classes", href: "/dashboard/teacher/classes" },
+  //   { label: "Assignments", href: "/dashboard/teacher/assignments" },
+  //   { label: "Grades", href: "/dashboard/teacher/grades" },
+  //   { label: "Messages", href: "/dashboard/teacher/messages" },
+  // ],
+  // parent: [
+  //   { label: "Overview", href: "/dashboard/parent" },
+  //   { label: "My Children", href: "/dashboard/parent/children" },
+  //   { label: "Attendance", href: "/dashboard/parent/attendance" },
+  //   { label: "Fees", href: "/dashboard/parent/fees" },
+  //   { label: "Messages", href: "/dashboard/parent/messages" },
+  // ],
 };
 
 const Sidebar = ({ role }: SidebarProps) => {
