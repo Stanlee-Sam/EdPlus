@@ -73,8 +73,8 @@ const SIDEBAR_ITEMS: Record<
       icon: FileText,
     },
     {
-      label: "Announcement",
-      href: "/schooladmin-announcement",
+      label: "Announcements",
+      href: "/schooladmin-announcements",
       icon: Megaphone,
     },
   ],
