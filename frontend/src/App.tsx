@@ -12,6 +12,7 @@ import SchoolAdminAcademics from "./pages/school-admin/SchoolAdminAcademics";
 import SchoolAdminDashboard from "./pages/school-admin/SchoolAdminDashboard";
 import SchoolAdminAnnouncements from "./pages/school-admin/SchoolAdminAnnouncements";
 import SchoolAdminResults from "./pages/school-admin/SchoolAdminResults";
+import SchoolAdminAttendance from "./pages/school-admin/SchoolAdminAttendance";
 const App = () => {
   return (
     <Routes>
@@ -31,9 +32,12 @@ const App = () => {
         element={<SchoolAdminAnnouncements />}
       />
       <Route path="/schooladmin-results" element={<SchoolAdminResults />} />
+      <Route
+        path="/schooladmin-attendance"
+        element={<SchoolAdminAttendance />}
+      />
 
       {/* <Route path="/schooladmin-financials" element={<SchoolAdminFinancials />} />
-      <Route path="/schooladmin-attendance" element={<SchoolAdminAttendance />} />
       <Route path="/schooladmin-homework" element={<SchoolAdminHomework />} />
       {/* <Route path="about" element={<About />} /> */}
     </Routes>
