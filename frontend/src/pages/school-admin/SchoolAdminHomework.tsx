@@ -1,9 +1,9 @@
-import Navbar from "@/components/ui/layout/Navbar"
-import Sidebar from "@/components/ui/layout/Sidebar"
-import { useState } from "react"
+import Navbar from "@/components/ui/layout/Navbar";
+import Sidebar from "@/components/ui/layout/Sidebar";
+import { useState } from "react";
 
 const SchoolAdminHomework = () => {
-   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -31,7 +31,7 @@ const SchoolAdminHomework = () => {
         </section>
       </main>
     </div>
-  )
-}
+  );
+};
 
-export default SchoolAdminHomework
+export default SchoolAdminHomework;

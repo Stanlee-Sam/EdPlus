@@ -137,7 +137,7 @@ const SchoolAdminDashboard = () => {
                 </div>
                 <div>
                   <span className="text-3xl font-black text-on-primary">
-                    $142.5k
+                    Ksh 142.5k
                   </span>
                   <p className="text-[12px] text-on-primary font-medium mt-1 opacity-90">
                     82% of target reached
@@ -146,12 +146,12 @@ const SchoolAdminDashboard = () => {
               </div>
             </section>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-              <section className="lg:col-span-4 bg-secondary p-8 rounded-2xl">
+              <section className="lg:col-span-4 bg-card p-8 rounded-2xl">
                 <div className="flex justify-between items-center mb-8">
                   <h4 className="text-xl font-bold text-on-surface">
                     Today's Attendance
                   </h4>
-                  <span className="text-[10px] bg-on-tertiary px-3 py-1 rounded-full font-bold uppercase tracking-wider text-on-surface-variant">
+                  <span className="text-[10px] bg-secondary px-3 py-1 rounded-full font-bold uppercase tracking-wider text-on-surface-variant">
                     Live
                   </span>
                 </div>
@@ -186,7 +186,7 @@ const SchoolAdminDashboard = () => {
                     <span className="font-bold text-on-surface">116</span>
                   </div>
                 </div>
-                <button className="w-full mt-8 py-3 bg-surface-container-highest hover:bg-surface-container-high text-on-secondary-container font-bold text-sm rounded-xl transition-all">
+                <button className="w-full mt-8 py-3 bg-primary hover:bg-primary/70 font-bold text-sm rounded-xl transition-all">
                   View Detailed Log
                 </button>
               </section>
