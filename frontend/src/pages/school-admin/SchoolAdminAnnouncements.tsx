@@ -134,7 +134,7 @@ const SchoolAdminAnnouncements = () => {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              <div className="md:col-span-2 bg-sidebar/80 rounded-xl p-2 flex gap-2">
+              <div className="md:col-span-2 bg-sidebar/80 rounded-lg p-2 flex gap-2">
                 <button className="flex-1 bg-card text-primary font-bold py-2 rounded-lg text-sm shadow-sm">
                   All Posts
                 </button>
@@ -145,7 +145,7 @@ const SchoolAdminAnnouncements = () => {
                   Scheduled
                 </button>
               </div>
-              <div className="bg-surface-container-low rounded-xl p-2 flex items-center px-4">
+              <div className="bg-surface-container-low rounded-lg p-2 flex items-center px-4">
                 <Filter
                   className="material-symbols-outlined text-on-surface-variant mr-3 text-sm"
                   data-icon="filter_list"
@@ -157,7 +157,7 @@ const SchoolAdminAnnouncements = () => {
                   <option>Target: Faculty</option>
                 </select>
               </div>
-              <div className="bg-surface-container-low rounded-xl p-2 flex items-center px-4">
+              <div className="bg-surface-container-low rounded-lg p-2 flex items-center px-4">
                 <Calendar
                   className="material-symbols-outlined text-on-surface-variant mr-3 text-sm"
                   data-icon="calendar_month"
@@ -174,7 +174,7 @@ const SchoolAdminAnnouncements = () => {
                 return (
                   <div
                     key={announcement.id}
-                    className="group relative bg-surface-container-lowest hover:bg-card p-4 sm:p-6 rounded-xl border border-transparent hover:border-primary/10 transition-all duration-300 shadow-[0_4px_20px_rgba(42,53,50,0.02)] hover:shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8"
+                    className="group relative bg-surface-container-lowest hover:bg-card p-4 sm:p-6 rounded-lg border border-transparent hover:border-primary/10 transition-all duration-300 shadow-[0_4px_20px_rgba(42,53,50,0.02)] hover:shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8"
                   >
                     <div
                       className={`h-16 w-16 rounded-2xl flex items-center justify-center shrink-0 transition-colors duration-300 ${announcement.iconClassName}`}
@@ -262,3 +262,5 @@ const SchoolAdminAnnouncements = () => {
 };
 
 export default SchoolAdminAnnouncements;
+
+

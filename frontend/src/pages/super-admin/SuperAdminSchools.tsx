@@ -122,7 +122,7 @@ const SuperAdminSchools = () => {
                   Educational Institutions
                 </h1>
               </div>
-              <button className="primary-gradient text-[15px] text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95">
+              <button className="primary-gradient text-[15px] text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95">
                 <CirclePlus className="" />
                 Register New School
               </button>
@@ -131,7 +131,7 @@ const SuperAdminSchools = () => {
               {stats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="bg-card p-6 rounded-2xl shadow-[0_20px_40px_rgba(42,53,50,0.04)] border border-outline-variant/5"
+                  className="bg-card p-6 rounded-lg shadow-[0_20px_40px_rgba(42,53,50,0.04)] border border-outline-variant/5"
                 >
                   <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant/60 mb-2">
                     {stat.label}
@@ -148,7 +148,7 @@ const SuperAdminSchools = () => {
             <div className="flex flex-wrap gap-4 items-center justify-between">
               <div className="flex gap-3">
                 <div className="relative">
-                  <select className="appearance-none bg-card border-none rounded-xl py-2.5 pl-4 pr-10 text-sm font-semibold text-on-surface focus:ring-2 ring-primary/20 cursor-pointer">
+                  <select className="appearance-none bg-card border-none rounded-lg py-2.5 pl-4 pr-10 text-sm font-semibold text-on-surface focus:ring-2 ring-primary/20 cursor-pointer">
                     <option>All Plan Types</option>
                     <option>Basic</option>
                     <option>Professional</option>
@@ -160,7 +160,7 @@ const SuperAdminSchools = () => {
                   />
                 </div>
                 <div className="relative">
-                  <select className="appearance-none bg-card border-none rounded-xl py-2.5 pl-4 pr-10 text-sm font-semibold text-on-surface focus:ring-2 ring-primary/20 cursor-pointer">
+                  <select className="appearance-none bg-card border-none rounded-lg py-2.5 pl-4 pr-10 text-sm font-semibold text-on-surface focus:ring-2 ring-primary/20 cursor-pointer">
                     <option>Any Status</option>
                     <option>Active</option>
                     <option>Pending</option>
@@ -193,7 +193,7 @@ const SuperAdminSchools = () => {
               {schools.map((school) => (
                 <div
                   key={school.id}
-                  className="relative flex flex-col gap-3 px-4 py-4 pr-12 sm:px-6 sm:py-5 bg-surface-container-lowest rounded-2xl shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-lg hover:shadow-primary/5 transition-all group bg-card lg:grid lg:grid-cols-12 lg:items-center lg:pr-6"
+                  className="relative flex flex-col gap-3 px-4 py-4 pr-12 sm:px-6 sm:py-5 bg-surface-container-lowest rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-lg hover:shadow-primary/5 transition-all group bg-card lg:grid lg:grid-cols-12 lg:items-center lg:pr-6"
                 >
                   <button className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden">
                     <EllipsisVertical className="material-symbols-outlined" />
@@ -263,7 +263,7 @@ const SuperAdminSchools = () => {
                 Showing 1-10 of 128 schools
               </p>
               <div className="flex gap-2">
-                <button className="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors">
+                <button className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors">
                   <ChevronsLeft 
                     className="material-symbols-outlined"
                   />
@@ -272,16 +272,16 @@ const SuperAdminSchools = () => {
                 <button className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center font-bold">
                   1
                 </button>
-                <button className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors border border-outline-variant/10">
+                <button className="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors border border-outline-variant/10">
                   2
                 </button>
-                <button className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors border border-outline-variant/10">
+                <button className="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center font-bold text-on-surface-variant hover:bg-surface-container-high transition-colors border border-outline-variant/10">
                   3
                 </button>
                 <div className="w-10 h-10 flex items-center justify-center text-on-surface-variant">
                   ...
                 </div>
-                <button className="w-10 h-10 rounded-xl bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors">
+                <button className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors">
                   <ChevronsRight 
                     className="material-symbols-outlined"
                   />
@@ -291,7 +291,7 @@ const SuperAdminSchools = () => {
             </div>
           </div>
 
-          <div className="fixed bottom-8 right-8 w-72 glass-panel bg-card/90 backdrop-blur p-6 rounded-2xl shadow-[0_28px_60px_rgba(42,53,50,0.18)] border border-border/40 z-50">
+          <div className="fixed bottom-8 right-8 w-72 glass-panel bg-card/90 backdrop-blur p-6 rounded-lg shadow-[0_28px_60px_rgba(42,53,50,0.18)] border border-border/40 z-50">
             <div className="flex items-start gap-4 mb-4">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
                 <Lightbulb className="material-symbols-outlined" />
@@ -318,3 +318,5 @@ const SuperAdminSchools = () => {
 };
 
 export default SuperAdminSchools;
+
+

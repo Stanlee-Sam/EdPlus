@@ -106,11 +106,11 @@ const SchoolAdminFinancials = () => {
                 </p>
               </div>
               <div className="flex flex-row items-center gap-4">
-                <button className="px-6 py-3 bg-sidebar font-semibold rounded-2xl flex items-center gap-2 hover:bg-sidebar/40 transition-colors">
+                <button className="px-6 py-3 bg-sidebar font-semibold rounded-lg flex items-center gap-2 hover:bg-sidebar/40 transition-colors">
                   <Share className="material-symbols-outlined text-xl" />
                   Export
                 </button>
-                <button className="px-8 py-3 primary-gradient  text-white font-bold rounded-2xl flex items-center gap-2 shadow-lg shadow-[#2DD4BF]/20 transform hover:-translate-y-0.5 transition-all active:scale-95">
+                <button className="px-8 py-3 primary-gradient  text-white font-bold rounded-lg flex items-center gap-2 shadow-lg shadow-[#2DD4BF]/20 transform hover:-translate-y-0.5 transition-all active:scale-95">
                   <CirclePlus className="material-symbols-outlined text-xl"/>
                   
                   Record Payment
@@ -118,7 +118,7 @@ const SchoolAdminFinancials = () => {
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <div className="bg-card p-8 rounded-3xl flex flex-col justify-between h-40">
+              <div className="bg-card p-8 rounded-lg flex flex-col justify-between h-40">
                 <div className="flex justify-between items-start">
                   <span className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
                     Total Expected
@@ -137,7 +137,7 @@ const SchoolAdminFinancials = () => {
                   </p>
                 </div>
               </div>
-              <div className="bg-card p-8 rounded-3xl flex flex-col justify-between h-40">
+              <div className="bg-card p-8 rounded-lg flex flex-col justify-between h-40">
                 <div className="flex justify-between items-start">
                   <span className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
                     Total Collected
@@ -156,7 +156,7 @@ const SchoolAdminFinancials = () => {
                   </p>
                 </div>
               </div>
-              <div className="bg-card p-8 rounded-3xl flex flex-col justify-between h-40">
+              <div className="bg-card p-8 rounded-lg flex flex-col justify-between h-40">
                 <div className="flex justify-between items-start">
                   <span className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
                     Outstanding Balance
@@ -175,7 +175,7 @@ const SchoolAdminFinancials = () => {
                   </p>
                 </div>
               </div>
-              <div className="bg-card p-8 rounded-3xl flex flex-col justify-between h-40 border-2 border-[#2DD4BF]/10">
+              <div className="bg-card p-8 rounded-lg flex flex-col justify-between h-40 border-2 border-[#2DD4BF]/10">
                 <div className="flex justify-between items-start">
                   <span className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
                     Collection Rate %
@@ -227,7 +227,7 @@ const SchoolAdminFinancials = () => {
                   Showing 24 of 1,240 entries
                 </div>
               </div>
-              <div className="px-8 py-3 bg-surface-container rounded-2xl hidden md:grid md:grid-cols-6 gap-4 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
+              <div className="px-8 py-3 bg-surface-container rounded-lg hidden md:grid md:grid-cols-6 gap-4 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">
                 <div>Date</div>
                 <div>Student Name</div>
                 <div>Level</div>
@@ -239,7 +239,7 @@ const SchoolAdminFinancials = () => {
                 {payments.map((payment) => (
                   <div
                     key={payment.id}
-                    className="px-5 sm:px-8 py-5 bg-card rounded-3xl hover:shadow-xl hover:shadow-[#2a3532]/05 transition-all border border-transparent hover:border-[#2DD4BF]/20 group"
+                    className="px-5 sm:px-8 py-5 bg-card rounded-lg hover:shadow-xl hover:shadow-[#2a3532]/05 transition-all border border-transparent hover:border-[#2DD4BF]/20 group"
                   >
                     <div className="hidden lg:grid lg:grid-cols-6 lg:gap-4 lg:items-center">
                       <div className="text-sm text-on-surface-variant">
@@ -323,24 +323,24 @@ const SchoolAdminFinancials = () => {
               </div>
               <div className="flex justify-center pt-8">
                 <nav className="flex items-center gap-2">
-                  <button className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all">
+                  <button className="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all">
                     <ChevronsLeft className="material-symbols-outlined"/>
                     
                   </button>
                   <button className="w-10 h-10 rounded-xl bg-primary text-on-primary font-bold flex items-center justify-center">
                     1
                   </button>
-                  <button className="w-10 h-10 rounded-xl bg-surface-container-lowest text-on-surface-variant font-bold flex items-center justify-center hover:bg-surface-container-high transition-all">
+                  <button className="w-10 h-10 rounded-lg bg-surface-container-lowest text-on-surface-variant font-bold flex items-center justify-center hover:bg-surface-container-high transition-all">
                     2
                   </button>
-                  <button className="w-10 h-10 rounded-xl bg-surface-container-lowest text-on-surface-variant font-bold flex items-center justify-center hover:bg-surface-container-high transition-all">
+                  <button className="w-10 h-10 rounded-lg bg-surface-container-lowest text-on-surface-variant font-bold flex items-center justify-center hover:bg-surface-container-high transition-all">
                     3
                   </button>
                   <span className="mx-2 text-on-surface-variant">...</span>
-                  <button className="w-10 h-10 rounded-xl bg-surface-container-lowest text-on-surface-variant font-bold flex items-center justify-center hover:bg-surface-container-high transition-all">
+                  <button className="w-10 h-10 rounded-lg bg-surface-container-lowest text-on-surface-variant font-bold flex items-center justify-center hover:bg-surface-container-high transition-all">
                     52
                   </button>
-                  <button className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all">
+                  <button className="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all">
                     <ChevronsRight className="material-symbols-outlined"/>
                   </button>
                 </nav>
@@ -380,3 +380,5 @@ const SchoolAdminFinancials = () => {
 };
 
 export default SchoolAdminFinancials;
+
+

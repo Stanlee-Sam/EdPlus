@@ -56,7 +56,7 @@ const SchoolAdminDashboard = () => {
               </p>
             </section>
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <div className="bg-card rounded-2xl p-6 shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col justify-between h-40">
+              <div className="bg-card rounded-lg p-6 shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col justify-between h-40">
                 <div className="flex justify-between items-start">
                   <span className="text-[11px] font-label font-bold text-on-surface-variant uppercase tracking-[0.1em]">
                     Total Students
@@ -81,7 +81,7 @@ const SchoolAdminDashboard = () => {
                   </p>
                 </div>
               </div>
-              <div className="bg-card rounded-2xl p-6 shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col justify-between h-40">
+              <div className="bg-card rounded-lg p-6 shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col justify-between h-40">
                 <div className="flex justify-between items-start">
                   <span className="text-[11px] font-label font-bold text-on-surface-variant uppercase tracking-[0.1em]">
                     Faculty
@@ -102,7 +102,7 @@ const SchoolAdminDashboard = () => {
                   </p>
                 </div>
               </div>
-              <div className="bg-card rounded-2xl p-6 shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col justify-between h-40">
+              <div className="bg-card rounded-lg p-6 shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col justify-between h-40">
                 <div className="flex justify-between items-start">
                   <span className="text-[11px] font-label font-bold text-on-surface-variant uppercase tracking-[0.1em]">
                     Attendance Rate
@@ -123,7 +123,7 @@ const SchoolAdminDashboard = () => {
                   </p>
                 </div>
               </div>
-              <div className="primary-gradient rounded-2xl p-6 flex flex-col justify-between h-40">
+              <div className="primary-gradient rounded-lg p-6 flex flex-col justify-between h-40">
                 <div className="flex justify-between items-start">
                   <span className="text-[11px] font-label font-bold text-on-primary uppercase tracking-[0.1em] opacity-80">
                     Fee Collection
@@ -146,7 +146,7 @@ const SchoolAdminDashboard = () => {
               </div>
             </section>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-              <section className="lg:col-span-4 bg-card p-8 rounded-2xl">
+              <section className="lg:col-span-4 bg-card p-8 rounded-lg">
                 <div className="flex justify-between items-center mb-8">
                   <h4 className="text-xl font-bold text-on-surface">
                     Today's Attendance
@@ -200,8 +200,8 @@ const SchoolAdminDashboard = () => {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  <div className="bg-card p-5 rounded-2xl flex items-center gap-6 hover:translate-x-1 transition-transform cursor-pointer">
-                    <div className="w-14 h-14 rounded-2xl bg-tertiary-container/20 flex flex-col items-center justify-center text-tertiary">
+                  <div className="bg-card p-5 rounded-lg flex items-center gap-6 hover:translate-x-1 transition-transform cursor-pointer">
+                    <div className="w-14 h-14 rounded-lg bg-tertiary-container/20 flex flex-col items-center justify-center text-tertiary">
                       <span className="text-xs font-black">24</span>
                       <span className="text-[10px] font-bold uppercase">
                         Oct
@@ -227,8 +227,8 @@ const SchoolAdminDashboard = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="bg-card p-5 rounded-2xl flex items-center gap-6 hover:translate-x-1 transition-transform cursor-pointer">
-                    <div className="w-14 h-14 rounded-2xl bg-primary-container/20 flex flex-col items-center justify-center text-primary">
+                  <div className="bg-card p-5 rounded-lg flex items-center gap-6 hover:translate-x-1 transition-transform cursor-pointer">
+                    <div className="w-14 h-14 rounded-lg bg-primary-container/20 flex flex-col items-center justify-center text-primary">
                       <span className="text-xs font-black">25</span>
                       <span className="text-[10px] font-bold uppercase">
                         Oct
@@ -256,8 +256,8 @@ const SchoolAdminDashboard = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="bg-card p-5 rounded-2xl flex items-center gap-6 hover:translate-x-1 transition-transform cursor-pointer">
-                    <div className="w-14 h-14 rounded-2xl bg-tertiary-container/20 flex flex-col items-center justify-center text-tertiary">
+                  <div className="bg-card p-5 rounded-lg flex items-center gap-6 hover:translate-x-1 transition-transform cursor-pointer">
+                    <div className="w-14 h-14 rounded-lg bg-tertiary-container/20 flex flex-col items-center justify-center text-tertiary">
                       <span className="text-xs font-black">27</span>
                       <span className="text-[10px] font-bold uppercase">
                         Oct
@@ -285,8 +285,8 @@ const SchoolAdminDashboard = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="bg-card p-5 rounded-2xl flex items-center gap-6 hover:translate-x-1 transition-transform cursor-pointer">
-                    <div className="w-14 h-14 rounded-2xl bg-tertiary-container/20 flex flex-col items-center justify-center text-tertiary">
+                  <div className="bg-card p-5 rounded-lg flex items-center gap-6 hover:translate-x-1 transition-transform cursor-pointer">
+                    <div className="w-14 h-14 rounded-lg bg-tertiary-container/20 flex flex-col items-center justify-center text-tertiary">
                       <span className="text-xs font-black">28</span>
                       <span className="text-[10px] font-bold uppercase">
                         Oct
@@ -322,7 +322,7 @@ const SchoolAdminDashboard = () => {
                 Recent Announcements
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2 bg-white rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col md:flex-row">
+                <div className="md:col-span-2 bg-card rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col md:flex-row">
                   <div className="md:w-1/3">
                     <img
                       className="w-full h-full object-cover"
@@ -347,7 +347,7 @@ const SchoolAdminDashboard = () => {
                     </button>
                   </div>
                 </div>
-                <div className="bg-primary-container p-8 rounded-2xl flex flex-col justify-between">
+                <div className="bg-primary p-8 rounded-lg flex flex-col justify-between">
                   <div>
                     <Megaphone
                       className="material-symbols-outlined text-on-primary-container text-4xl"
@@ -377,3 +377,5 @@ const SchoolAdminDashboard = () => {
 };
 
 export default SchoolAdminDashboard;
+
+

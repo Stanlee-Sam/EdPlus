@@ -64,7 +64,7 @@ const NotificationsList = () => {
         <SquarePen className="material-symbols-outlined" />
         Compose Notification
       </button>
-      <div className="bg-sidebar/50 rounded-xl p-1 flex items-center">
+      <div className="bg-sidebar/50 rounded-lg p-1 flex items-center">
         <button className="flex-1 py-2 text-[10px] font-bold uppercase tracking-wider bg-surface-container-lowest text-primary rounded-lg shadow-sm">
           All
         </button>
@@ -80,7 +80,7 @@ const NotificationsList = () => {
           <Link
             key={item.id}
             to={`/notifications/${item.id}`}
-            className={`block p-4 rounded-xl cursor-pointer transition-colors relative group ${
+            className={`block p-4 rounded-lg cursor-pointer transition-colors relative group ${
               item.status === "unread"
                 ? "bg-card border border-primary/10 hover:bg-surface-container-high"
                 : "bg-card/70 hover:bg-sidebar/50"
@@ -127,7 +127,7 @@ const NotificationDetail = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-card rounded-xl shadow-[0_20px_40px_rgba(42,53,50,0.04)] overflow-hidden">
+    <div className="flex-1 flex flex-col bg-card rounded-lg shadow-[0_20px_40px_rgba(42,53,50,0.04)] overflow-hidden">
       <div className="p-8 border-b border-surface-container">
         <div className="flex justify-between items-start mb-6">
           <h3 className="text-2xl font-extrabold text-on-surface leading-tight max-w-2xl">
@@ -174,7 +174,7 @@ const NotificationDetail = () => {
       </div>
       <div className="p-6 bg-surface-container-low flex items-center justify-between">
         <div className="flex gap-3">
-          <button className="px-6 py-2.5 bg-surface-container-lowest border border-outline-variant/30 text-on-surface-variant font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-surface-container transition-all flex items-center gap-2">
+          <button className="px-6 py-2.5 bg-surface-container-lowest border border-outline-variant/30 text-on-surface-variant font-bold text-xs uppercase tracking-wider rounded-lg hover:bg-surface-container transition-all flex items-center gap-2">
             <Forward className="material-symbols-outlined text-sm" />
             Forward
           </button>
@@ -245,7 +245,7 @@ const NotificationsIndex = () => {
       <div className="md:hidden">
         <NotificationsList />
       </div>
-      <div className="hidden md:flex h-full items-center justify-center text-sm text-on-surface-variant bg-card rounded-xl border border-outline-variant/10">
+      <div className="hidden md:flex h-full items-center justify-center text-sm text-on-surface-variant bg-card rounded-lg border border-outline-variant/10">
         Select a notification to view details.
       </div>
     </div>
@@ -254,3 +254,5 @@ const NotificationsIndex = () => {
 
 export { NotificationsIndex, NotificationDetail };
 export default NotificationsLayout;
+
+

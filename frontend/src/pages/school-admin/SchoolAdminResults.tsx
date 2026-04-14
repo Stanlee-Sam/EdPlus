@@ -118,18 +118,18 @@ const SchoolAdminResults = () => {
                 </p>
               </div>
               <div className="flex gap-4">
-                <button className="px-6 py-3 rounded-xl bg-sidebar text-on-surface font-bold text-sm hover:bg-surface-container-highest transition-all flex items-center gap-2">
+                <button className="px-6 py-3 rounded-lg bg-sidebar text-on-surface font-bold text-sm hover:bg-surface-container-highest transition-all flex items-center gap-2">
                   <Files className="material-symbols-outlined text-lg" />
                   Export PDF
                 </button>
-                <button className="px-6 py-3 rounded-xl primary-gradient text-white font-bold text-sm shadow-xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2">
+                <button className="px-6 py-3 rounded-lg primary-gradient text-white font-bold text-sm shadow-xl shadow-primary/20 hover:scale-105 transition-all flex items-center gap-2">
                   <Plus className="material-symbols-outlined text-lg" />
                   Add New Result
                 </button>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-              <div className="bg-card p-6 rounded-3xl shadow-[0_20px_40px_rgba(42,53,50,0.04)] group hover:shadow-lg transition-shadow">
+              <div className="bg-card p-6 rounded-lg shadow-[0_20px_40px_rgba(42,53,50,0.04)] group hover:shadow-lg transition-shadow">
                 <p className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-4">
                   ClassName Average
                 </p>
@@ -146,7 +146,7 @@ const SchoolAdminResults = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-card p-6 rounded-3xl shadow-[0_20px_40px_rgba(42,53,50,0.04)] group hover:shadow-lg transition-shadow">
+              <div className="bg-card p-6 rounded-lg shadow-[0_20px_40px_rgba(42,53,50,0.04)] group hover:shadow-lg transition-shadow">
                 <p className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-4">
                   Highest Score
                 </p>
@@ -160,7 +160,7 @@ const SchoolAdminResults = () => {
                   <Trophy className="material-symbols-outlined text-primary/70 text-3xl" />
                 </div>
               </div>
-              <div className="bg-card p-6 rounded-3xl shadow-[0_20px_40px_rgba(42,53,50,0.04)] group hover:shadow-lg transition-shadow">
+              <div className="bg-card p-6 rounded-lg shadow-[0_20px_40px_rgba(42,53,50,0.04)] group hover:shadow-lg transition-shadow">
                 <p className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-4">
                   Pass Rate
                 </p>
@@ -176,7 +176,7 @@ const SchoolAdminResults = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-card p-6 rounded-3xl shadow-[0_20px_40px_rgba(42,53,50,0.04)] group hover:shadow-lg transition-shadow">
+              <div className="bg-card p-6 rounded-lg shadow-[0_20px_40px_rgba(42,53,50,0.04)] group hover:shadow-lg transition-shadow">
                 <p className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-4">
                   Total Processed
                 </p>
@@ -190,24 +190,24 @@ const SchoolAdminResults = () => {
             </div>
             <div className="bg-sidebar p-3 md:p-2 rounded-lg flex flex-col lg:flex-row lg:items-center gap-2 mb-8">
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                <div className="relative group bg-card rounded-sm">
-                  <select className="appearance-none w-full bg-surface-container-lowest border-none rounded-sm py-3 pl-4 pr-10 text-sm font-semibold text-on-surface cursor-pointer focus:ring-2 focus:ring-primary/10 transition-all outline-none">
+                <div className="relative group bg-card rounded-lg">
+                  <select className="appearance-none w-full bg-surface-container-lowest border-none rounded-lg py-3 pl-4 pr-10 text-sm font-semibold text-on-surface cursor-pointer focus:ring-2 focus:ring-primary/10 transition-all outline-none">
                     <option>Grade 10-A</option>
                     <option>Grade 10-B</option>
                     <option>Grade 11-A</option>
                   </select>
                   <ChevronsDown className="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-on-surface-variant" />
                 </div>
-                <div className="relative group bg-card rounded-sm">
-                  <select className="appearance-none w-full bg-surface-container-lowest border-none rounded-sm py-3 pl-4 pr-10 text-sm font-semibold text-on-surface cursor-pointer focus:ring-2 focus:ring-primary/10 transition-all outline-none">
+                <div className="relative group bg-card rounded-lg">
+                  <select className="appearance-none w-full bg-surface-container-lowest border-none rounded-lg py-3 pl-4 pr-10 text-sm font-semibold text-on-surface cursor-pointer focus:ring-2 focus:ring-primary/10 transition-all outline-none">
                     <option>Term 1, 2023-24</option>
                     <option>Term 2, 2023-24</option>
                     <option>Finals, 2023-24</option>
                   </select>
                   <ChevronsDown className="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-on-surface-variant" />
                 </div>
-                <div className="relative group bg-card rounded-sm">
-                  <select className="appearance-none w-full bg-surface-container-lowest border-none rounded-sm py-3 pl-4 pr-10 text-sm font-semibold text-on-surface cursor-pointer focus:ring-2 focus:ring-primary/10 transition-all outline-none">
+                <div className="relative group bg-card rounded-lg">
+                  <select className="appearance-none w-full bg-surface-container-lowest border-none rounded-lg py-3 pl-4 pr-10 text-sm font-semibold text-on-surface cursor-pointer focus:ring-2 focus:ring-primary/10 transition-all outline-none">
                     <option>Mathematics</option>
                     <option>Physics</option>
                     <option>Literature</option>
@@ -215,9 +215,9 @@ const SchoolAdminResults = () => {
                   </select>
                   <ChevronsDown className="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-on-surface-variant" />
                 </div>
-                <div className="relative group bg-card rounded-sm">
+                <div className="relative group bg-card rounded-lg">
                   <input
-                    className="w-full bg-surface-container-lowest border-none rounded-sm py-3 pl-10 pr-4 text-sm font-semibold text-on-surface focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+                    className="w-full bg-surface-container-lowest border-none rounded-lg py-3 pl-10 pr-4 text-sm font-semibold text-on-surface focus:ring-2 focus:ring-primary/10 transition-all outline-none"
                     placeholder="Search Student..."
                     type="text"
                   />
@@ -228,12 +228,12 @@ const SchoolAdminResults = () => {
                 <ListFilter className="material-symbols-outlined" />
               </button>
             </div>
-            <div className="bg-surface-container-lowest rounded-3xl shadow-[0_20px_40px_rgba(42,53,50,0.06)] overflow-hidden">
+            <div className="bg-surface-container-lowest rounded-lg shadow-[0_20px_40px_rgba(42,53,50,0.06)] overflow-hidden">
               <div className="lg:hidden space-y-4 p-4">
                 {results.map((row) => (
                   <div
                     key={row.id}
-                    className="bg-card rounded-2xl border border-outline-variant/10 p-4 space-y-3 shadow-[0_4px_20px_rgba(42,53,50,0.04)]"
+                    className="bg-card rounded-lg border border-outline-variant/10 p-4 space-y-3 shadow-[0_4px_20px_rgba(42,53,50,0.04)]"
                   >
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-on-surface-variant font-medium">
@@ -383,3 +383,5 @@ const SchoolAdminResults = () => {
 };
 
 export default SchoolAdminResults;
+
+

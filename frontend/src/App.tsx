@@ -15,6 +15,13 @@ import SchoolAdminResults from "./pages/school-admin/SchoolAdminResults";
 import SchoolAdminAttendance from "./pages/school-admin/SchoolAdminAttendance";
 import SchoolAdminFinancials from "./pages/school-admin/SchoolAdminFinancials";
 import SchoolAdminHomework from "./pages/school-admin/SchoolAdminHomework";
+import TeacherDashboard from "./pages/teacher/TeacherDashboard";
+import TeacherClasses from "./pages/teacher/TeacherClasses";
+import TeacherStudents from "./pages/teacher/TeacherStudents";
+import TeacherResults from "./pages/teacher/TeacherResults";
+import TeacherAssignments from "./pages/teacher/TeacherAssignments";
+import TeacherAttendance from "./pages/teacher/TeacherAttendance";
+import TeacherMessages from "./pages/teacher/TeacherMessages";
 const App = () => {
   return (
     <Routes>
@@ -40,6 +47,14 @@ const App = () => {
       />
       <Route path="/schooladmin-financials" element={<SchoolAdminFinancials />} />
       <Route path="/schooladmin-homework" element={<SchoolAdminHomework />} />
+      <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
+      <Route path="/teacher-myclasses" element={<TeacherClasses />} />
+      <Route path="/teacher-students" element={<TeacherStudents />} />
+      <Route path="/teacher-assignments" element={<TeacherAssignments />} />
+      <Route path="/teacher-attendance" element={<TeacherAttendance />} />
+      <Route path="/teacher-results" element={<TeacherResults />} />
+      <Route path="/teacher-messages" element={<TeacherMessages />} />
+      
 
       {/* 
       {/* <Route path="about" element={<About />} /> */}

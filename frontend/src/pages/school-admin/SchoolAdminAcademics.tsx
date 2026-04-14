@@ -88,7 +88,7 @@ const SchoolAdminAcademics = () => {
               return (
                 <div
                   key={stat.title}
-                  className="bg-card p-8 rounded-xl shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col justify-between group hover:translate-y-[-4px] transition-all duration-300"
+                  className="bg-card p-8 rounded-lg shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col justify-between group hover:translate-y-[-4px] transition-all duration-300"
                 >
                   <div>
                     <div className="w-14 h-14 bg-background rounded-xl flex items-center justify-center mb-6">
@@ -116,7 +116,7 @@ const SchoolAdminAcademics = () => {
             })}
           </div>
           <section className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-surface-container-low rounded-xl p-10 flex flex-col justify-center">
+            <div className="bg-surface-container-low rounded-lg p-10 flex flex-col justify-center">
               <h4 className="font-headline text-2xl font-bold mb-4">
                 Academic Calendar
               </h4>
@@ -135,7 +135,7 @@ const SchoolAdminAcademics = () => {
             </div>
             <div className="relative h-64 rounded-xl overflow-hidden group">
               <img
-                className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
+                className="w-full h-full object-cover grayscale-0 opacity-100 transition-all duration-700"
                 data-alt="Group of diverse students collaborating in a bright, modern school library with clean white furniture and soft teal accents"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwTt_lxKU3-lTdZdZon_IL9eeszRM3Hi72pVbDAszkrpvi5LDnyuoK8F5VFkB9587m4xHlHx7_1iHr9tn_jP8xsO_5A7QNKoljurAvErnCGpBBKJw9Mi_F0AWtM4RRqC-G1KWcnYE5PKR6c6gJrCY-q964P8gC1fTJ_fbMCgyfDd7GM9yiJUxPm5OPyo66C6H44AlBsWNYU4NCcAPy6g5Ft4UtoU_HfW2csj_wFJnhYU_ooF3_b-7dZysB-FhlYKzVvLjEJR8U5pSR"
               />
@@ -154,3 +154,5 @@ const SchoolAdminAcademics = () => {
 };
 
 export default SchoolAdminAcademics;
+
+

@@ -78,13 +78,15 @@ const SIDEBAR_ITEMS: Record<
       icon: Megaphone,
     },
   ],
-  // teacher: [
-  //   { label: "Overview", href: "/dashboard/teacher" },
-  //   { label: "My Classes", href: "/dashboard/teacher/classes" },
-  //   { label: "Assignments", href: "/dashboard/teacher/assignments" },
-  //   { label: "Grades", href: "/dashboard/teacher/grades" },
-  //   { label: "Messages", href: "/dashboard/teacher/messages" },
-  // ],
+  teacher: [
+    { label: "Dashboard", href: "/teacher-dashboard", icon: LayoutDashboard },
+    { label: "My Classes", href: "/teacher-myclasses", icon: GraduationCap },
+    { label: "Students", href: "/teacher-students", icon: Users },
+    { label: "Assignments", href: "/teacher-assignments", icon: FileText },
+    { label: "Attendance", href: "/teacher-attendance", icon: Calendar },
+    { label: "Grades", href: "/teacher-results", icon: ChartColumn },
+    { label: "Messages", href: "/teacher-messages", icon: Megaphone },
+  ],
   // parent: [
   //   { label: "Overview", href: "/dashboard/parent" },
   //   { label: "My Children", href: "/dashboard/parent/children" },

@@ -44,7 +44,7 @@ const SuperAdminDashboard = () => {
               </p>
             </div>
             <div className="flex flex-col justify-around md:flex-row gap-3 w-full">
-              <div className="bg-card p-6 flex flex-col gap-3 rounded-md  items-start justify-center w-full md:w-[25%]">
+              <div className="bg-card p-6 flex flex-col gap-3 rounded-lg  items-start justify-center w-full md:w-[25%]">
                 <div className="bg-primary p-2 rounded-sm ">
                   <GraduationCap />
                 </div>
@@ -58,7 +58,7 @@ const SuperAdminDashboard = () => {
                   +2 from last month
                 </span>
               </div>
-              <div className="bg-card p-6 flex flex-col gap-3 rounded-md items-start justify-center w-full md:w-[25%]">
+              <div className="bg-card p-6 flex flex-col gap-3 rounded-lg items-start justify-center w-full md:w-[25%]">
                 <div className="bg-primary p-2 rounded-sm ">
                   <Users />
                 </div>
@@ -70,7 +70,7 @@ const SuperAdminDashboard = () => {
                 </h3>
                 <span>Steady traffic management</span>
               </div>
-              <div className="md:col-span-2 bg-chart-6 text-on-primary p-8 rounded-2xl shadow-[0_20px_40px_rgba(42,53,50,0.06)] relative overflow-hidden flex items-center justify-between min-h-[200px] w-full md:w-[50%]">
+              <div className="md:col-span-2 bg-chart-6 text-on-primary p-8 rounded-lg shadow-[0_20px_40px_rgba(42,53,50,0.06)] relative overflow-hidden flex items-center justify-between min-h-[200px] w-full md:w-[50%]">
                 <div className="relative z-10">
                   <p className="text-xs font-bold text-primary tracking-wider uppercase mb-2">
                     Revenue Growth
@@ -95,7 +95,7 @@ const SuperAdminDashboard = () => {
             </div>
 
             <div className="flex flex-col gap-5 md:flex-row w-full">
-              <div className="bg-sidebar lg:col-span-2 bg-surface-container-low p-8 rounded-2xl w-full md:w-3/4">
+              <div className="bg-sidebar lg:col-span-2 bg-surface-container-low p-8 rounded-lg w-full md:w-3/4">
                 <div className="flex justify-between items-center mb-8">
                   <div>
                     <h4 className="text-xl font-black text-on-surface">
@@ -152,13 +152,13 @@ const SuperAdminDashboard = () => {
                   </div>
                 </div>
                 <div className="mt-8 grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-card rounded-md">
+                  <div className="p-4 bg-card rounded-lg">
                     <p className="text-[10px] font-bold text-on-surface-variant uppercase">
                       Uptime Avg
                     </p>
                     <p className="text-xl font-bold text-on-surface">99.98%</p>
                   </div>
-                  <div className="p-4 bg-card rounded-md">
+                  <div className="p-4 bg-card rounded-lg">
                     <p className="text-[10px] font-bold text-on-surface-variant uppercase">
                       Server Latency
                     </p>
@@ -166,7 +166,7 @@ const SuperAdminDashboard = () => {
                   </div>
                 </div>
               </div>
-              <div className="bg-card p-8 rounded-2xl shadow-[0_20px_40px_rgba(42,53,50,0.06)] w-full md:w-1/4">
+              <div className="bg-card p-8 rounded-lg shadow-[0_20px_40px_rgba(42,53,50,0.06)] w-full md:w-1/4">
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h4 className="text-xl font-black text-on-surface">
@@ -182,7 +182,7 @@ const SuperAdminDashboard = () => {
                 </div>
                 <div className="space-y-6">
                   <div className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-2xl bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+                    <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
                       
                     </div>
                     <div className="flex-1">
@@ -198,7 +198,7 @@ const SuperAdminDashboard = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-2xl bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+                    <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
                       
                     </div>
                     <div className="flex-1">
@@ -214,7 +214,7 @@ const SuperAdminDashboard = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-2xl bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+                    <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
                       
                     </div>
                     <div className="flex-1">
@@ -230,7 +230,7 @@ const SuperAdminDashboard = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-2xl bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+                    <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
                       
                     </div>
                     <div className="flex-1">
@@ -246,7 +246,7 @@ const SuperAdminDashboard = () => {
                     </span>
                   </div>
                 </div>
-                <div className="mt-8 p-6 bg-sidebar rounded-2xl border-dashed border-2 border-outline-variant/20 flex flex-col items-center text-center">
+                <div className="mt-8 p-6 bg-sidebar rounded-lg border-dashed border-2 border-outline-variant/20 flex flex-col items-center text-center">
                   <span
                     className="material-symbols-outlined text-outline-variant mb-2"
                   >
@@ -255,7 +255,7 @@ const SuperAdminDashboard = () => {
                   <p className="text-xs font-bold text-on-surface mb-4">
                     Onboard New School
                   </p>
-                  <button className="w-full cursor-pointer py-3 primary-gradient text-on-primary rounded-xl text-xs font-bold shadow-lg shadow-primary/20">
+                  <button className="w-full cursor-pointer py-3 primary-gradient text-on-primary rounded-lg text-xs font-bold shadow-lg shadow-primary/20">
                     Launch Setup
                   </button>
                 </div>
@@ -269,3 +269,5 @@ const SuperAdminDashboard = () => {
 };
 
 export default SuperAdminDashboard;
+
+

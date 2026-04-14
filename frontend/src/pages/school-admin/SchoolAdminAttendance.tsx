@@ -131,7 +131,7 @@ const SchoolAdminAttendance = () => {
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <div className="bg-sidebar px-4 py-2 rounded-2xl flex items-center gap-3">
+                <div className="bg-sidebar px-4 py-2 rounded-lg flex items-center gap-3">
                   <Calendar className="material-symbols-outlined text-primary" />
 
                   <input
@@ -140,7 +140,7 @@ const SchoolAdminAttendance = () => {
                     value="2023-10-24"
                   />
                 </div>
-                <div className="bg-sidebar px-4 py-2 rounded-2xl flex items-center gap-3">
+                <div className="bg-sidebar px-4 py-2 rounded-lg flex items-center gap-3">
                   <Users className="material-symbols-outlined text-primary" />
 
                   <select className="bg-sidebar text-foreground border-none p-0 text-sm font-semibold focus:ring-0 appearance-none pr-6">
@@ -157,7 +157,7 @@ const SchoolAdminAttendance = () => {
                 return (
                   <div
                     key={stat.label}
-                    className="bg-card p-5 sm:p-8 rounded-2xl cloud-shadow border border-outline-variant/5"
+                    className="bg-card p-5 sm:p-8 rounded-lg cloud-shadow border border-outline-variant/5"
                   >
                     <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-4">
                       {stat.label}
@@ -179,7 +179,7 @@ const SchoolAdminAttendance = () => {
                 );
               })}
             </section>
-            <section className="flex flex-col md:flex-row justify-between items-center gap-4 bg-sidebar/50 p-4 rounded-2xl">
+            <section className="flex flex-col md:flex-row justify-between items-center gap-4 bg-sidebar/50 p-4 rounded-lg">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-bold text-on-surface-variant ml-2">
                   Viewing:{" "}
@@ -195,7 +195,7 @@ const SchoolAdminAttendance = () => {
                 <button className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl border border-primary/20 text-primary font-bold text-sm hover:bg-primary/25 transition-colors">
                   Mark All Present
                 </button>
-                <button className="flex-1 sm:flex-none px-8 py-2.5 rounded-xl primary-gradient text-on-primary font-bold text-sm shadow-md shadow-primary/20 transition-all active:scale-95">
+                <button className="flex-1 sm:flex-none px-8 py-2.5 rounded-lg primary-gradient text-on-primary font-bold text-sm shadow-md shadow-primary/20 transition-all active:scale-95">
                   Submit Attendance
                 </button>
               </div>
@@ -300,21 +300,21 @@ const SchoolAdminAttendance = () => {
               </p>
               <div className="flex gap-2">
                 <button
-                  className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface-variant disabled:opacity-30"
+                  className="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant disabled:opacity-30"
                   disabled
                 >
                   <ChevronsLeft className="material-symbols-outlined" />
                 </button>
-                <button className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-primary font-bold">
+                <button className="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary font-bold">
                   1
                 </button>
-                <button className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors">
+                <button className="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors">
                   2
                 </button>
-                <button className="w-10 h-10 rounded-xl bg-surface-container-lowest flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors">
+                <button className="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors">
                   3
                 </button>
-                <button className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all">
+                <button className="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-primary hover:text-on-primary transition-all">
                   <ChevronsRight className="material-symbols-outlined" />
                 </button>
               </div>
@@ -327,3 +327,5 @@ const SchoolAdminAttendance = () => {
 };
 
 export default SchoolAdminAttendance;
+
+
