@@ -22,7 +22,7 @@ const TeacherAssignments = () => {
       >
         <Sidebar role="teacher" />
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex flex-1 flex-col">
         <header className="sticky top-0 z-10 border-b border-border/40 bg-card/80 backdrop-blur">
           <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         </header>
@@ -88,7 +88,7 @@ const TeacherAssignments = () => {
                       Title
                     </label>
                     <input
-                      className="w-full bg-surface-container-high border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20"
+                      className="w-full bg-secondary border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20"
                       placeholder="e.g. Victorian Poetry Analysis"
                       type="text"
                     />
@@ -96,9 +96,9 @@ const TeacherAssignments = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">
-                        ClassName
+                        Class
                       </label>
-                      <select className="w-full bg-surface-container-high border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20">
+                      <select className="w-full bg-secondary border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20">
                         <option>10-A Literature</option>
                         <option>12-C Humanities</option>
                       </select>
@@ -108,7 +108,7 @@ const TeacherAssignments = () => {
                         Due Date
                       </label>
                       <input
-                        className="w-full bg-surface-container-high border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20"
+                        className="w-full bg-secondary border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20"
                         type="date"
                       />
                     </div>
@@ -125,7 +125,7 @@ const TeacherAssignments = () => {
               </div>
             </div>
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-2xl font-bold">Recent Assignments</h3>
+              <h3 className="text-xl md:text-2xl font-bold">Recent Assignments</h3>
               <div className="flex gap-4">
                 <button className="flex items-center gap-2 px-4 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-highest transition-colors">
                   <ListFilter

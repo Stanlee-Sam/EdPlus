@@ -22,12 +22,12 @@ const TeacherClasses = () => {
       >
         <Sidebar role="teacher" />
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex flex-1 flex-col">
         <header className="sticky top-0 z-10 border-b border-border/40 bg-card/80 backdrop-blur">
           <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         </header>
         <section className="flex-1 p-6">
-          <div className="pb-12 px-10 flex-1">
+          <div className="flex-1">
             <div className="mb-12 flex flex-col md:justify-between md:flex-row gap-6">
               <div>
                 <h2 className="text-4xl font-extrabold tracking-tight text-on-surface font-headline">
