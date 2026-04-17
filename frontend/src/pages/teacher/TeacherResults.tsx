@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
-import { Save, Send, SendHorizontal, Sparkle } from "lucide-react";
+import { Save, SendHorizontal, Sparkle } from "lucide-react";
 const TeacherResults = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -16,7 +16,7 @@ const TeacherResults = () => {
         />
       ) : null}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-border/40 bg-card transition-transform duration-200 ease-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 border-r border-border/40 bg-card transition-transform duration-200 ease-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

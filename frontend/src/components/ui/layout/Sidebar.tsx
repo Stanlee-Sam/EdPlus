@@ -87,13 +87,19 @@ const SIDEBAR_ITEMS: Record<
     { label: "Grades", href: "/teacher-results", icon: ChartColumn },
     { label: "Messages", href: "/teacher-messages", icon: Megaphone },
   ],
-  // parent: [
-  //   { label: "Overview", href: "/dashboard/parent" },
-  //   { label: "My Children", href: "/dashboard/parent/children" },
-  //   { label: "Attendance", href: "/dashboard/parent/attendance" },
-  //   { label: "Fees", href: "/dashboard/parent/fees" },
-  //   { label: "Messages", href: "/dashboard/parent/messages" },
-  // ],
+  parent: [
+    { label: "Dashboard", href: "/parent-dashboard", icon: LayoutDashboard },
+    { label: "My Students", href: "/parent-students", icon: Users },
+    { label: "Attendance", href: "/parent-attendance", icon: Calendar },
+    { label: "Financials", href: "/parent-financials", icon: Banknote },
+    { label: "Results", href: "/parent-results", icon: ChartColumn },
+    { label: "Homework", href: "/parent-homework", icon: FileText },
+    {
+      label: "Term Summary",
+      href: "/parent-term-summary",
+      icon: GraduationCap,
+    },
+  ],
 };
 
 const Sidebar = ({ role }: SidebarProps) => {

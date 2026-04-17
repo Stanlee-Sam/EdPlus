@@ -22,6 +22,13 @@ import TeacherResults from "./pages/teacher/TeacherResults";
 import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 import TeacherAttendance from "./pages/teacher/TeacherAttendance";
 import TeacherMessages from "./pages/teacher/TeacherMessages";
+import ParentDashboard from "./pages/parent/ParentDashboard";
+import ParentStudents from "./pages/parent/ParentStudents";
+import ParentAttendance from "./pages/parent/ParentAttendance";
+import ParentFinancials from "./pages/parent/ParentFinancials";
+import ParentResults from "./pages/parent/ParentResults";
+import ParentHomework from "./pages/parent/ParentHomework";
+import ParentTermSummary from "./pages/parent/ParentTermSummary";
 const App = () => {
   return (
     <Routes>
@@ -54,7 +61,14 @@ const App = () => {
       <Route path="/teacher-attendance" element={<TeacherAttendance />} />
       <Route path="/teacher-results" element={<TeacherResults />} />
       <Route path="/teacher-messages" element={<TeacherMessages />} />
-      
+
+      <Route path="/parent-dashboard" element={<ParentDashboard />} />
+      <Route path="/parent-students" element={<ParentStudents />} />
+      <Route path="/parent-attendance" element={<ParentAttendance />} />
+      <Route path="/parent-financials" element={<ParentFinancials />} />
+      <Route path="/parent-results" element={<ParentResults />} />
+      <Route path="/parent-homework" element={<ParentHomework />} />
+      <Route path="/parent-term-summary" element={<ParentTermSummary />} />
 
       {/* 
       {/* <Route path="about" element={<About />} /> */}

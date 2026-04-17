@@ -1,7 +1,8 @@
-import { useState } from "react"
-import Navbar from "@/components/ui/layout/Navbar"
-import Sidebar from "@/components/ui/layout/Sidebar"
-const TeacherMessages = () => {
+import Navbar from '@/components/ui/layout/Navbar'
+import Sidebar from '@/components/ui/layout/Sidebar'
+import  { useState } from 'react'
+
+const ParentStudents = () => {
  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   return (
@@ -19,7 +20,7 @@ const TeacherMessages = () => {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <Sidebar role="teacher" />
+        <Sidebar role="parent" />
       </aside>
       <main className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 border-b border-border/40 bg-card/80 backdrop-blur">
@@ -33,4 +34,4 @@ const TeacherMessages = () => {
   )
 }
 
-export default TeacherMessages
+export default ParentStudents
