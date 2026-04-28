@@ -32,7 +32,7 @@ import ParentTermSummary from "./pages/parent/ParentTermSummary";
 const App = () => {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/superadmin-dashboard" element={<SuperAdminDashboard />} />
       <Route path="/superadmin-schools" element={<SuperAdminSchools />} />

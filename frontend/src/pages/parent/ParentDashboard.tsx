@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
-import { Book, BookOpen, ChevronRight, CircleStar, Ellipsis, Sigma } from "lucide-react";
+import { BookOpen, ChevronRight, CircleStar, Ellipsis, Sigma } from "lucide-react";
 
 const ParentDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
