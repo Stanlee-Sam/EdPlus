@@ -115,12 +115,12 @@ const SchoolAdminAttendance = () => {
       >
         <Sidebar role="school-admin" />
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex flex-1 flex-col">
         <header className="sticky top-0 z-10 border-b border-border/40 bg-card/80 backdrop-blur">
           <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         </header>
         <section className="flex-1 p-6">
-          <div className="md:p-8 max-w-7xl mx-auto space-y-12">
+          <div className="max-w-7xl mx-auto space-y-12">
             <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
                 <h2 className="text-4xl font-extrabold text-on-surface tracking-tight">

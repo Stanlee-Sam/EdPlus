@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import { ExternalLink } from 'lucide-react';
 
 const ParentStudents = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -155,7 +156,7 @@ const ParentStudents = () => {
                       Personal Information
                     </h4>
                   </div>
-                  <div className="grid grid-cols-2 gap-y-8 gap-x-12">
+                  <div className="flex flex-col md:grid md:grid-cols-2 gap-y-8 gap-x-12">
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
                         Date of Birth
@@ -305,9 +306,9 @@ const ParentStudents = () => {
                     <h4 className="text-sm font-bold text-on-surface uppercase tracking-widest">
                       Latest Results
                     </h4>
-                    <LockOpenIcon className="material-symbols-outlined text-on-surface-variant text-lg cursor-pointer">
+                    <ExternalLink className="material-symbols-outlined text-on-surface-variant text-lg cursor-pointer">
                       open_in_new
-                    </LockOpenIcon>
+                    </ExternalLink>
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-3 bg-card rounded-lg">

@@ -41,12 +41,12 @@ const SchoolAdminDashboard = () => {
       >
         <Sidebar role="school-admin" />
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex flex-1 flex-col">
         <header className="sticky top-0 z-10 border-b border-border/40 bg-card/80 backdrop-blur">
           <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         </header>
         <section className="flex-1 p-6">
-          <div className="pb-16 px-12">
+          <div className="">
             <section className="mb-12">
               <h3 className="text-4xl font-headline font-extrabold text-on-surface tracking-tight mb-2">
                 Good morning, Principal.

@@ -102,12 +102,12 @@ const SchoolAdminResults = () => {
       >
         <Sidebar role="school-admin" />
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex flex-1 flex-col">
         <header className="sticky top-0 z-10 border-b border-border/40 bg-card/80 backdrop-blur">
           <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         </header>
         <section className="flex-1 p-6">
-          <div className="md:px-12 md:py-10 flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             <div className="flex flex-col md:flex-row md:justify-between gap-3  mb-12">
               <div>
                 <h2 className="text-4xl font-extrabold text-on-surface tracking-tight mb-2">

@@ -265,7 +265,7 @@ const TeacherAttendance = () => {
               <button className="px-6 py-3 rounded-2xl font-bold text-[12px] md:text-sm bg-secondary hover:bg-secondary/50 transition-all">
                 Save as Draft
               </button>
-              <button className="px-10 py-3.5 rounded-2xl bg-gradient-to-br from-[#2DD4BF] to-[#006b60] text-white font-extrabold  text-[12px] md:text-sm shadow-[0_10px_20px_rgba(45,212,191,0.3)] hover:shadow-[0_15px_30px_rgba(45,212,191,0.4)] hover:-translate-y-0.5 transition-all active:scale-95 duration-150">
+              <button className="px-10 py-3.5 rounded-2xl primary-gradient text-white font-extrabold  text-[12px] md:text-sm shadow-[0_10px_20px_rgba(45,212,191,0.3)] hover:shadow-[0_15px_30px_rgba(45,212,191,0.4)] hover:-translate-y-0.5 transition-all active:scale-95 duration-150">
                 Submit Attendance
               </button>
             </div>

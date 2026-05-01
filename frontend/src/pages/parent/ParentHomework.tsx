@@ -61,7 +61,7 @@ const ParentHomework = () => {
                 </div>
                 <div className="bg-card rounded-lg p-6 cloud-shadow flex flex-col md:flex-row gap-3 items-center justify-between group hover:-translate-y-1 transition-transform duration-300">
                   <div className="flex flex-row items-start w-full gap-6">
-                    <div className="w-14 h-14 rounded-lg bg-tertiary-container/30 flex items-center justify-center text-tertiary">
+                    <div className="w-14 h-14 rounded-lg bg-secondary flex items-center justify-center text-tertiary">
                       <Sigma
                         className="material-symbols-outlined text-3xl"
                         data-icon="functions"
@@ -116,7 +116,7 @@ const ParentHomework = () => {
                 </div>
                 <div className="bg-card rounded-lg p-6 cloud-shadow flex flex-col md:flex-row gap-3 items-center justify-between group hover:-translate-y-1 transition-transform duration-300">
                   <div className="flex flex-row items-start w-full gap-6">
-                    <div className="w-14 h-14 rounded-2xl bg-primary-container/30 flex items-center justify-center text-primary">
+                    <div className="w-14 h-14 rounded-lg bg-secondary flex items-center justify-center text-tertiary">
                       <FlaskConical
                         className="material-symbols-outlined text-3xl"
                         data-icon="science"
@@ -170,7 +170,7 @@ const ParentHomework = () => {
                 </div>
                 <div className="bg-card rounded-lg p-6 cloud-shadow flex flex-col md:flex-row gap-3 items-center justify-between group hover:-translate-y-1 transition-transform duration-300">
                   <div className="flex flex-row items-start w-full gap-6">
-                    <div className="w-14 h-14 rounded-2xl bg-secondary flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-lg bg-secondary flex items-center justify-center text-tertiary">
                       <BookOpen
                         className="material-symbols-outlined  text-3xl"
                         data-icon="menu_book"
@@ -222,7 +222,7 @@ const ParentHomework = () => {
                 </div>
                 <div className="bg-card rounded-lg p-6 cloud-shadow flex flex-col md:flex-row gap-3 items-center justify-between group hover:-translate-y-1 transition-transform duration-300">
                   <div className="flex flex-row items-start w-full gap-6">
-                    <div className="w-14 h-14 rounded-2xl bg-tertiary-container/30 flex items-center justify-center text-tertiary">
+                    <div className="w-14 h-14 rounded-lg bg-secondary flex items-center justify-center text-tertiary">
                       <ScrollText 
                         className="material-symbols-outlined text-3xl"
                         data-icon="history_edu"

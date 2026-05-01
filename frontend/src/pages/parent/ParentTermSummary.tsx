@@ -283,7 +283,7 @@ const ParentTermSummary = () => {
                 </div>
               </div>
             </section>
-            <section className="flex justify-between items-center py-12 border-t border-surface-container-high">
+            <section className="flex flex-col gap-5 md:flex-row md:justify-between items-center py-12 border-t border-surface-container-high">
               <p className="text-sm text-on-surface-variant">
                 Report generated on April 12, 2024
               </p>

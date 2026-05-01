@@ -294,7 +294,7 @@ const TeacherResults = () => {
                 </div>
               </div>
             </div>
-            <div className="mt-16 flex items-center justify-between bg-secondary/50 backdrop-blur-md p-6 rounded-lg border border-card shadow-xl shadow-on-surface/5">
+            <div className="mt-16 flex flex-col gap-5 md:flex-row items-center md:justify-between bg-secondary/50 backdrop-blur-md p-6 rounded-lg border border-card shadow-xl shadow-on-surface/5">
               <div className="flex items-center gap-6">
                 <div className="flex -space-x-3">
                   <div className="w-8 h-8 rounded-full border-2 border-surface bg-primary flex items-center justify-center text-[10px] font-bold">

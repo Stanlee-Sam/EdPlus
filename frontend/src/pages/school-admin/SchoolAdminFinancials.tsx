@@ -89,12 +89,12 @@ const SchoolAdminFinancials = () => {
       >
         <Sidebar role="school-admin" />
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex flex-1 flex-col">
         <header className="sticky top-0 z-10 border-b border-border/40 bg-card/80 backdrop-blur">
           <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         </header>
         <section className="flex-1 p-6">
-          <div className="md:p-10 min-h-screen">
+          <div className="min-h-screen">
             <div className="mb-12 flex flex-col gap-3 md:flex-row  md:justify-between">
               <div>
                 <h2 className="text-4xl font-extrabold text-on-surface tracking-tight mb-2">

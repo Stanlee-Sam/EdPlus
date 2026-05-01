@@ -107,12 +107,12 @@ const SuperAdminSchools = () => {
       >
         <Sidebar role="super-admin" />
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex flex-1 flex-col">
         <header className="sticky top-0 z-10 border-b border-border/40 bg-card/80 backdrop-blur">
           <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
         </header>
         <section className="flex-1 p-6">
-          <div className="p-8 max-w-7xl mx-auto space-y-8">
+          <div className="max-w-7xl mx-auto space-y-8">
             <div className="flex flex-col  gap-3 w-full md:flex-row md:justify-between md:items-end">
               <div className="space-y-1">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
