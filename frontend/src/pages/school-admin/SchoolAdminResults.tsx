@@ -347,12 +347,12 @@ const SchoolAdminResults = () => {
                   ))}
                 </tbody>
               </table>
-              <div className="px-8 py-4 bg-surface-container-low/20 flex items-center justify-between border-t border-surface-container">
+              <div className="flex flex-col gap-3 border-t border-surface-container bg-surface-container-low/20 px-4 py-4 sm:px-8 md:flex-row md:items-center md:justify-between">
                 <p className="text-xs font-medium text-on-surface-variant">
                   Showing <span className="text-on-surface">5</span> of{" "}
                   <span className="text-on-surface">1,284</span> results
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant disabled:opacity-30"
                     disabled
