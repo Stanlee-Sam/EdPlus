@@ -1,7 +1,12 @@
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
-import { useState } from "react";
-import { ChevronsLeft, ChevronsRight, CirclePlus, Lightbulb } from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+  ChevronsLeft,
+  ChevronsRight,
+  CirclePlus,
+  Lightbulb,
+} from "lucide-react";
 import { MoveUp } from "lucide-react";
 import { Zap } from "lucide-react";
 import { Hourglass } from "lucide-react";
@@ -9,13 +14,24 @@ import { ChevronsDown } from "lucide-react";
 import { ArrowDownWideNarrow } from "lucide-react";
 import { MapPin } from "lucide-react";
 import { EllipsisVertical } from "lucide-react";
+import axios from "axios";
+import { toast } from "sonner";
+import api from "../../../utils/api";
+
+interface School {
+  id: number;
+  name: string;
+  location: string;
+}
 
 const SuperAdminSchools = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [loading, setLoading] = useState(false);
   const stats = [
     {
       label: "Total Schools",
-      value: "128",
+      value: schools.length,
       meta: (
         <span className="text-xs font-bold text-primary flex items-center">
           +4% <MoveUp className="w-3 h-3" strokeWidth={2} />
@@ -24,7 +40,7 @@ const SuperAdminSchools = () => {
     },
     {
       label: "Active Plans",
-      value: "112",
+      value: "-",
       meta: (
         <span className="text-xs font-bold text-on-surface-variant/40">
           Premium
@@ -33,7 +49,7 @@ const SuperAdminSchools = () => {
     },
     {
       label: "Pending Setup",
-      value: "12",
+      value: "-",
       meta: <Hourglass />,
     },
     {
@@ -43,52 +59,72 @@ const SuperAdminSchools = () => {
     },
   ];
 
-  const schools = [
-    {
-      name: "Northwood Academy",
-      id: "ED-2024-001",
-      admin: "Dr. Sarah Jenkins",
-      role: "Lead Principal",
-      location: "Seattle, WA",
-      plan: "Enterprise",
-      status: "Active",
-      logoUrl:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
-    },
-    {
-      name: "Riverbend High",
-      id: "ED-2024-014",
-      admin: "Mr. Daniel Cho",
-      role: "Headmaster",
-      location: "Portland, OR",
-      plan: "Standard",
-      status: "Active",
-      logoUrl:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
-    },
-    {
-      name: "Oakwood STEM Institute",
-      id: "ED-2024-021",
-      admin: "Ms. Priya Menon",
-      role: "Principal",
-      location: "Austin, TX",
-      plan: "Enterprise",
-      status: "Active",
-      logoUrl:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
-    },
-    {
-      name: "The Arts Collegiate",
-      id: "ED-2024-034",
-      admin: "Dr. Lila Grant",
-      role: "Director",
-      location: "Chicago, IL",
-      plan: "Standard",
-      status: "Active",
-      logoUrl:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
-    },
-  ];
+  // const schools = [
+  //   {
+  //     name: "Northwood Academy",
+  //     id: "ED-2024-001",
+  //     admin: "Dr. Sarah Jenkins",
+  //     role: "Lead Principal",
+  //     location: "Seattle, WA",
+  //     plan: "Enterprise",
+  //     status: "Active",
+  //     logoUrl:
+  //       "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
+  //   },
+  //   {
+  //     name: "Riverbend High",
+  //     id: "ED-2024-014",
+  //     admin: "Mr. Daniel Cho",
+  //     role: "Headmaster",
+  //     location: "Portland, OR",
+  //     plan: "Standard",
+  //     status: "Active",
+  //     logoUrl:
+  //       "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
+  //   },
+  //   {
+  //     name: "Oakwood STEM Institute",
+  //     id: "ED-2024-021",
+  //     admin: "Ms. Priya Menon",
+  //     role: "Principal",
+  //     location: "Austin, TX",
+  //     plan: "Enterprise",
+  //     status: "Active",
+  //     logoUrl:
+  //       "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
+  //   },
+  //   {
+  //     name: "The Arts Collegiate",
+  //     id: "ED-2024-034",
+  //     admin: "Dr. Lila Grant",
+  //     role: "Director",
+  //     location: "Chicago, IL",
+  //     plan: "Standard",
+  //     status: "Active",
+  //     logoUrl:
+  //       "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
+  //   },
+  // ];
+
+  useEffect(() => {
+    const fetchSchools = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get("/schools");
+        setSchools(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(
+            error?.response?.data.message || "Failed to fetch schools",
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchools();
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -190,73 +226,79 @@ const SuperAdminSchools = () => {
                 <div className="col-span-2 text-center">Status</div>
                 <div className="col-span-1 text-right">Actions</div>
               </div>
-              {schools.map((school) => (
-                <div
-                  key={school.id}
-                  className="relative flex flex-col gap-3 px-4 py-4 pr-12 sm:px-6 sm:py-5 bg-surface-container-lowest rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-lg hover:shadow-primary/5 transition-all group bg-card lg:grid lg:grid-cols-12 lg:items-center lg:pr-6"
-                >
-                  <button className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden">
-                    <EllipsisVertical className="material-symbols-outlined" />
-                  </button>
-                  <div className="lg:col-span-4 flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-background overflow-hidden shrink-0">
-                      <img
-                        alt={`${school.name} logo`}
-                        className="w-full h-full object-cover"
-                        src={school.logoUrl}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-on-surface group-hover:text-primary transition-colors">
-                        {school.name}
-                      </h4>
-                      <p className="text-xs text-on-surface-variant/70">
-                        ID: {school.id}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="lg:col-span-2 hidden lg:block">
-                    <p className="text-sm font-semibold text-on-surface">
-                      {school.admin}
-                    </p>
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">
-                      {school.role}
-                    </p>
-                  </div>
-                  <div className="lg:col-span-2 hidden lg:flex items-center gap-1.5 text-on-surface-variant text-sm">
-                    <MapPin className="material-symbols-outlined text-base" />
-                    <span>{school.location}</span>
-                  </div>
-                  <div className="lg:col-span-1 hidden lg:block">
-                    <span className="px-3 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-black uppercase rounded-full">
-                      {school.plan}
-                    </span>
-                  </div>
-                  <div className="lg:col-span-2 hidden lg:flex lg:justify-center">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                      {school.status}
-                    </div>
-                  </div>
-                  <div className="lg:hidden flex flex-col gap-2 text-xs text-on-surface-variant">
-                    <span className="w-fit px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
-                      {school.status}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{school.location}</span>
-                    </div>
-                    <span className="w-fit px-2 py-1 rounded-full bg-tertiary-container text-on-tertiary-container font-bold uppercase">
-                      {school.plan}
-                    </span>
-                  </div>
-                  <div className="lg:col-span-1 hidden lg:flex justify-end">
-                    <button className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all">
+              {schools.length === 0 ? (
+                <div className="flex items-center justify-center">
+                  No Schools Found
+                </div>
+              ) : (
+                schools.map((school) => (
+                  <div
+                    key={school.id}
+                    className="relative flex flex-col gap-3 px-4 py-4 pr-12 sm:px-6 sm:py-5 bg-surface-container-lowest rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-lg hover:shadow-primary/5 transition-all group bg-card lg:grid lg:grid-cols-12 lg:items-center lg:pr-6"
+                  >
+                    <button className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden">
                       <EllipsisVertical className="material-symbols-outlined" />
                     </button>
+                    <div className="lg:col-span-4 flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-background overflow-hidden shrink-0">
+                        <img
+                          alt={`${school.name} logo`}
+                          className="w-full h-full object-cover"
+                          src={school.logoUrl}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-on-surface group-hover:text-primary transition-colors">
+                          {school.name}
+                        </h4>
+                        <p className="text-xs text-on-surface-variant/70">
+                          ID: {school.id}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="lg:col-span-2 hidden lg:block">
+                      <p className="text-sm font-semibold text-on-surface">
+                        {school.admin}
+                      </p>
+                      <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">
+                        {school.role}
+                      </p>
+                    </div>
+                    <div className="lg:col-span-2 hidden lg:flex items-center gap-1.5 text-on-surface-variant text-sm">
+                      <MapPin className="material-symbols-outlined text-base" />
+                      <span>{school.location}</span>
+                    </div>
+                    <div className="lg:col-span-1 hidden lg:block">
+                      <span className="px-3 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-black uppercase rounded-full">
+                        {school.plan}
+                      </span>
+                    </div>
+                    <div className="lg:col-span-2 hidden lg:flex lg:justify-center">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                        {school.status}
+                      </div>
+                    </div>
+                    <div className="lg:hidden flex flex-col gap-2 text-xs text-on-surface-variant">
+                      <span className="w-fit px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
+                        {school.status}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{school.location}</span>
+                      </div>
+                      <span className="w-fit px-2 py-1 rounded-full bg-tertiary-container text-on-tertiary-container font-bold uppercase">
+                        {school.plan}
+                      </span>
+                    </div>
+                    <div className="lg:col-span-1 hidden lg:flex justify-end">
+                      <button className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all">
+                        <EllipsisVertical className="material-symbols-outlined" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
             <div className="flex items-center justify-between pt-6 border-t border-outline-variant/10">
               <p className="text-xs font-bold text-on-surface-variant/60 uppercase tracking-widest">
@@ -264,10 +306,7 @@ const SuperAdminSchools = () => {
               </p>
               <div className="flex gap-2">
                 <button className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors">
-                  <ChevronsLeft 
-                    className="material-symbols-outlined"
-                  />
-                    
+                  <ChevronsLeft className="material-symbols-outlined" />
                 </button>
                 <button className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center font-bold">
                   1
@@ -282,10 +321,7 @@ const SuperAdminSchools = () => {
                   ...
                 </div>
                 <button className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors">
-                  <ChevronsRight 
-                    className="material-symbols-outlined"
-                  />
-                    
+                  <ChevronsRight className="material-symbols-outlined" />
                 </button>
               </div>
             </div>
@@ -318,5 +354,3 @@ const SuperAdminSchools = () => {
 };
 
 export default SuperAdminSchools;
-
-

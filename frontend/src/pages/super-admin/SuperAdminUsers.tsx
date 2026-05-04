@@ -1,5 +1,6 @@
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
+import axios from "axios";
 import {
   ArrowDownWideNarrow,
   ChevronsLeft,
@@ -10,45 +11,78 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import api from "../../../utils/api";
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  createdAt: string;
+}
 
 const SuperAdminUsers = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const stats = [
-    {
-      label: "Total Users",
-      value: "128",
-      icon: Users,
-      iconClassName: "bg-primary text-foreground",
-      span: "+4% this month",
-    },
-    {
-      label: "Active Sessions",
-      value: "14",
-      icon: Zap,
-      iconClassName: "bg-primary text-foreground",
-      span: "Active Now",
-    },
-    {
-      label: "Pending Invitations",
-      value: "07",
-      icon: Mail,
-      iconClassName: "bg-primary text-foreground",
-      span: "3 expiring",
-    },
-  ];
-  const users = [
-    {
-      id: 1,
-      name: "Sarah Jenkins",
-      email: "sarah.jenkins@example.com",
-      role: "Admin",
-      status: "Active",
-      last_login: "2024-06-15 10:45 AM",
-      logoUrl:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
-    },
-  ];
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+
+ const stats = [
+  {
+    label: "Total Users",
+    value: users.length,
+    icon: Users,
+    iconClassName: "bg-primary text-foreground",
+    span: "All registered users",
+  },
+  {
+    label: "Active Sessions",
+    value: "—",
+    icon: Zap,
+    iconClassName: "bg-primary text-foreground",
+    span: "Coming soon",
+  },
+  {
+    label: "Pending Invitations",
+    value: "—",
+    icon: Mail,
+    iconClassName: "bg-primary text-foreground",
+    span: "Coming soon",
+  },
+];
+  // const users = [
+  //   {
+  //     id: 1,
+  //     name: "Sarah Jenkins",
+  //     email: "sarah.jenkins@example.com",
+  //     role: "Admin",
+  //     status: "Active",
+  //     last_login: "2024-06-15 10:45 AM",
+  //     logoUrl:
+  //       "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
+  //   },
+  // ];
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true)
+      try {
+        const response = await api.get('/users')
+        setUsers(response.data)
+        
+      } catch (error) {
+        if(axios.isAxiosError(error)){
+          toast.error(error?.response?.data.message || 'Something went wrong')
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUsers()
+  }, [])
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -145,8 +179,7 @@ const SuperAdminUsers = () => {
                       <img
                         alt={`${user.name} logo`}
                         className="w-full h-full object-cover"
-                        src={user.logoUrl}
-                      />
+                        src={`https://ui-avatars.com/api/?name=${user.name}`}                      />
                     </div>
                     <div className="flex-1">
                       <h4 className="font-bold text-on-surface group-hover:text-primary transition-colors">
@@ -161,19 +194,21 @@ const SuperAdminUsers = () => {
                   </div>
                   <div className="lg:col-span-3 hidden lg:block">
                     <p className="text-sm font-semibold text-on-surface">
-                      {user.last_login}
-                    </p>
+                      {new Date(user.createdAt).toLocaleDateString()}                    </p>
                   </div>
 
                   <div className="lg:col-span-2 hidden lg:flex lg:justify-center">
                     <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                      {user.status}
+                      {/* Temporary solution */}
+                      {/* Temporary solution */}
+                      Active
                     </div>
                   </div>
                   <div className="lg:hidden flex flex-col gap-2 text-xs text-on-surface-variant">
                     <span className="w-fit px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
-                      {user.status}
+                      {/* Temporary solution */}
+                      Active
                     </span>
                   </div>
                   <div className="lg:col-span-1 hidden lg:flex justify-end">

@@ -30,7 +30,7 @@ const Signup = () => {
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!email || !password || !name) {
+    if (!email || !password || !name || !phone) {
       toast.error("All fields are required!");
       return;
     }

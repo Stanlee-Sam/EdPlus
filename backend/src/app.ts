@@ -34,7 +34,7 @@ app.get("/health", (_req, res) => {
 //user endpoint
 app.use("/users", userRoute);
 //school endpoint
-app.use("/school", schoolRoute);
+app.use("/schools", schoolRoute);
 //class endpoint
 app.use("/class", classRoute);
 //student endpoint

@@ -1,11 +1,62 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
 import { GraduationCap } from "lucide-react";
 import { Users } from "lucide-react";
 import { CirclePlus } from 'lucide-react';
+import api from "../../../utils/api";
+import axios from "axios";
+import { toast } from "sonner";
+
+interface School {
+  id : number;
+  name : string;
+  location : string;
+}
+
 const SuperAdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [loading, setLoading] = useState(false);  
+
+  useEffect(() => {
+  const fetchSchools = async () => {
+
+    setLoading(true);
+      try {
+      const response = await api.get('/schools')
+      setSchools(response.data);
+      
+    } catch (error) {
+      if(axios.isAxiosError(error)){
+        toast.error(error.response?.data?.message || 'Failed to load schools data');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  fetchSchools();
+    
+  }, [])
+
+  useEffect(() => {
+     const fetchUsers = async () => {
+      try {
+      const response = await api.get('/users')
+      setUsers(response.data);
+      
+    } catch (error) {
+      if(axios.isAxiosError(error)){
+        toast.error(error.response?.data?.message || 'Failed to load schools data');
+      }
+    }
+  }
+
+  fetchUsers();
+    
+  }, [])
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -52,7 +103,7 @@ const SuperAdminDashboard = () => {
                   Total Schools
                 </p>
                 <h3 className="text-[40px] text-foreground font-extrabold">
-                  42
+                  {schools.length}
                 </h3>
                 <span className="text-primary font-bold text-sm">
                   +2 from last month
@@ -66,7 +117,7 @@ const SuperAdminDashboard = () => {
                   Active Users
                 </p>
                 <h3 className="text-[40px] text-foreground font-extrabold">
-                  12, 840
+                  {users.length}
                 </h3>
                 <span>Steady traffic management</span>
               </div>
@@ -181,6 +232,32 @@ const SuperAdminDashboard = () => {
                   </button>
                 </div>
                 <div className="space-y-6">
+                  {
+                  schools.length === 0 ? (
+                    <div>
+                      <p className="text-sm font-bold text-on-surface">
+                        No schools found
+                      </p>
+                    </div>
+                  ) :
+                  schools.map((school) => (
+                     <div key={school.id} className="flex items-center gap-4 group">
+                    <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+                      
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-on-surface">
+                        {school.name}
+                      </p>
+                      <p className="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider">
+                        {school.location}
+                      </p>
+                    </div>
+                    <span className="text-[10px] text-outline-variant font-medium">
+                      2d ago
+                    </span>
+                  </div>
+                  ))}
                   <div className="flex items-center gap-4 group">
                     <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
                       

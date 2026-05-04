@@ -22,7 +22,7 @@ export const getSchools = async (req: Request, res: Response) => {
     const schools = await prisma.school.findMany({
       where : {isDeleted : false}
     });
-    res.status(200).json({ schools });
+    res.status(200).json(schools);
   } catch (error: unknown) {
     console.error("Error fetching schools", error);
     res.status(500).json({ message: "Failed to fetch schools" });
