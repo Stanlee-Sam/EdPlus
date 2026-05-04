@@ -1,19 +1,57 @@
 import authImg from "../../assets/auth.png";
 import logo from "../../assets/EdPlus_Logo.png";
-import { useState } from "react";
-import { Mail } from "lucide-react";
+import React, { useState } from "react";
+import { Mail, Phone } from "lucide-react";
 import { Lock } from "lucide-react";
 import { ArrowRight } from "lucide-react";
 import { User } from "lucide-react";
 
+import { toast } from "sonner";
+import axios from "axios";
+import { useNavigate } from "react-router";
+import api from "../../../utils/api";
+
+import { MoonLoader } from "react-spinners";
+
+interface Signup {
+  name: string;
+  email: string;
+  password: string;
+}
+
 const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log({ name, email, password });
+
+    if (!email || !password || !name) {
+      toast.error("All fields are required!");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post("/users/register", {
+        email,
+        password,
+        name,
+        phone,
+      });
+      toast.success("Sign Up successful");
+      navigate("/");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error?.response?.data.message || "Something went wrong!");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -93,6 +131,21 @@ const Signup = () => {
           </div>
 
           <div className="grid gap-2 w-full relative">
+            <label className="text-sm/relaxed font-bold" htmlFor="phone">
+              PHONE NUMBER
+            </label>
+            <input
+              id="phone"
+              placeholder="0712345678"
+              className="w-full p-4 rounded-sm text-[18px] border border-input bg-input outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 pl-12"
+              type="text"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+            />
+            <Phone className="absolute left-3 bottom-4 text-muted-foreground" />
+          </div>
+
+          <div className="grid gap-2 w-full relative">
             <label className="text-sm/relaxed font-bold" htmlFor="password">
               PASSWORD
             </label>
@@ -111,7 +164,13 @@ const Signup = () => {
             type="submit"
             className="w-full rounded-sm bg-primary px-4 py-4 text-[18px] font-bold text-primary-foreground transition-colors hover:bg-primary/80 cursor-pointer flex flex-row gap-3 items-center justify-center"
           >
-            <span>Create Account</span> <ArrowRight className="font-bold" />
+            {loading ? (
+              <MoonLoader size={20} color="#fff" />
+            ) : (
+              <>
+                <span>Create Account</span> <ArrowRight className="font-bold" />
+              </>
+            )}
           </button>
 
           <hr className="w-full border-t border-border my-7" />

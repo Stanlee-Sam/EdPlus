@@ -4,13 +4,42 @@ import { useState } from "react";
 import { Mail } from "lucide-react";
 import { Lock } from "lucide-react";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router";
+import axios from "axios";
+import { toast } from "sonner";
+import api from "../../../utils/api";
+import { MoonLoader } from "react-spinners";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log({ email, password });
+
+    if (email === "" || password === "") {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.post("users/login", {
+        email,
+        password,
+      });
+      toast.success("Login successful");
+      localStorage.setItem("token", response.data.token);
+      navigate("/");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error?.response?.data.message || "Something went wrong!");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <div className="flex md:flex-row flex-col items-center justify-center gap-2 w-full min-h-screen">
@@ -21,7 +50,6 @@ const Login = () => {
             <div>
               <h3 className="text-foreground font-bold text-3xl">EdPlus</h3>
               <p className="text-muted-foreground text-sm">ACADEMIC ATELIER</p>
-
             </div>
           </div>
           <h1 className="text-6xl text-foreground font-bold w-full">
@@ -93,7 +121,14 @@ const Login = () => {
             type="submit"
             className="w-full rounded-sm bg-primary px-4 py-4 text-[18px] font-bold text-primary-foreground transition-colors hover:bg-primary/80 cursor-pointer flex flex-row gap-3 items-center justify-center"
           >
-            <span>Sign In to EdPlus</span> <ArrowRight className="font-bold" />
+            {loading ? (
+              <MoonLoader size={20} color="white" />
+            ) : (
+              <>
+                <span>Sign In to EdPlus</span>{" "}
+                <ArrowRight className="font-bold" />
+              </>
+            )}
           </button>
 
           <hr className="w-full border-t border-border my-7" />
