@@ -2,10 +2,14 @@ import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
 import { useEffect, useState } from "react";
 import {
+  Building,
   ChevronsLeft,
   ChevronsRight,
   CirclePlus,
+  Edit,
   Lightbulb,
+  School,
+  X,
 } from "lucide-react";
 import { MoveUp } from "lucide-react";
 import { Zap } from "lucide-react";
@@ -17,17 +21,28 @@ import { EllipsisVertical } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import api from "../../../utils/api";
+import EmptyState from "@/components/ui/layout/EmptyState";
 
 interface School {
   id: number;
   name: string;
   location: string;
+  contactEmail: string;
+  contactPhone: string;
 }
 
 const SuperAdminSchools = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    contactEmail: "",
+    location: "",
+    contactPhone: "",
+  });
+  const [editingFieldId, setEditingFieldId] = useState<number | null>(null);
+  const [mode, setMode] = useState<"create" | "edit" | null>(null);
   const stats = [
     {
       label: "Total Schools",
@@ -59,52 +74,6 @@ const SuperAdminSchools = () => {
     },
   ];
 
-  // const schools = [
-  //   {
-  //     name: "Northwood Academy",
-  //     id: "ED-2024-001",
-  //     admin: "Dr. Sarah Jenkins",
-  //     role: "Lead Principal",
-  //     location: "Seattle, WA",
-  //     plan: "Enterprise",
-  //     status: "Active",
-  //     logoUrl:
-  //       "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
-  //   },
-  //   {
-  //     name: "Riverbend High",
-  //     id: "ED-2024-014",
-  //     admin: "Mr. Daniel Cho",
-  //     role: "Headmaster",
-  //     location: "Portland, OR",
-  //     plan: "Standard",
-  //     status: "Active",
-  //     logoUrl:
-  //       "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
-  //   },
-  //   {
-  //     name: "Oakwood STEM Institute",
-  //     id: "ED-2024-021",
-  //     admin: "Ms. Priya Menon",
-  //     role: "Principal",
-  //     location: "Austin, TX",
-  //     plan: "Enterprise",
-  //     status: "Active",
-  //     logoUrl:
-  //       "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
-  //   },
-  //   {
-  //     name: "The Arts Collegiate",
-  //     id: "ED-2024-034",
-  //     admin: "Dr. Lila Grant",
-  //     role: "Director",
-  //     location: "Chicago, IL",
-  //     plan: "Standard",
-  //     status: "Active",
-  //     logoUrl:
-  //       "https://lh3.googleusercontent.com/aida-public/AB6AXuCNnDMtygmComHmFwemwvF63F56iWMLhxg9mHdrKGOh6C42pAR5bpx_xAZUUX8K3Rh1IeIyVamhI53Vz0buPGLkjRPFhW_706Xqrdg7kIiDgQm2Ffq27F_h8z5zI_nl9UeQ5yLq2SBrHwNxw3iXtXE7ydCZNtO5N_a_PIerpIHSIvmwBqpjcSmwVklk5MOOHuy4KcPWQgq-EVhZbMhC21t2Pu0UUzbNeeHvCJ-vcRBNJvM-HZ1xuZ4kuvj-uOs9OVGGfqBdayXbsiuU",
-  //   },
-  // ];
 
   useEffect(() => {
     const fetchSchools = async () => {
@@ -125,6 +94,77 @@ const SuperAdminSchools = () => {
 
     fetchSchools();
   }, []);
+
+  const openCreateModal = () => {
+    setFormData({
+      name: "",
+      contactEmail: "",
+      location: "",
+      contactPhone: "",
+    });
+    setMode("create");
+  };
+  const openEditModal = (school: School) => {
+    setFormData({
+      name: school.name,
+      location: school.location,
+      contactEmail: school.contactEmail,
+      contactPhone: school.contactPhone,
+    });
+    setEditingFieldId(school.id);
+    setMode("edit");
+  };
+
+  const closeModal = () => {
+    setMode(null);
+    setEditingFieldId(null);
+
+    setFormData({
+      name: "",
+      contactEmail: "",
+      location: "",
+      contactPhone: "",
+    });
+  };
+
+  const handleCreateSchool = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    setLoading(true);
+    try {
+      const response = await api.post("/schools", formData);
+      setSchools((prev) => [response.data, ...prev]);
+      toast.success("School created successfully");
+      closeModal();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Failed to create school");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleUpdateSchool = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    try {
+      const response = await api.put(`/schools/${editingFieldId}`, formData);
+      setSchools((prevSchools) =>
+        prevSchools.map((prevSchool) =>
+          prevSchool.id === editingFieldId
+            ? { ...prevSchool, ...response.data }
+            : prevSchool,
+        ),
+      );
+
+      toast.success("School updated successfully");
+      closeModal();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "");
+      }
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -158,7 +198,10 @@ const SuperAdminSchools = () => {
                   Educational Institutions
                 </h1>
               </div>
-              <button className="primary-gradient text-[15px] text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95">
+              <button
+                onClick={openCreateModal}
+                className="primary-gradient text-[15px] text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95"
+              >
                 <CirclePlus className="" />
                 Register New School
               </button>
@@ -222,13 +265,18 @@ const SuperAdminSchools = () => {
                 <div className="col-span-4">School Name</div>
                 <div className="col-span-2">Admin / Principal</div>
                 <div className="col-span-2">Location</div>
-                <div className="col-span-1">Plan Type</div>
                 <div className="col-span-2 text-center">Status</div>
                 <div className="col-span-1 text-right">Actions</div>
               </div>
               {schools.length === 0 ? (
-                <div className="flex items-center justify-center">
-                  No Schools Found
+                <div className="p-12">
+                  <EmptyState
+                    title="No Schools registered"
+                    description="There are currently no schools in the system. Start by adding a new field to begin monitoring."
+                    icon={School}
+                    actionLabel="Add New School"
+                    // onAction={openCreateModal}
+                  />
                 </div>
               ) : (
                 schools.map((school) => (
@@ -240,12 +288,8 @@ const SuperAdminSchools = () => {
                       <EllipsisVertical className="material-symbols-outlined" />
                     </button>
                     <div className="lg:col-span-4 flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-background overflow-hidden shrink-0">
-                        <img
-                          alt={`${school.name} logo`}
-                          className="w-full h-full object-cover"
-                          src={school.logoUrl}
-                        />
+                      <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center">
+                        <School />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-on-surface group-hover:text-primary transition-colors">
@@ -268,32 +312,25 @@ const SuperAdminSchools = () => {
                       <MapPin className="material-symbols-outlined text-base" />
                       <span>{school.location}</span>
                     </div>
-                    <div className="lg:col-span-1 hidden lg:block">
-                      <span className="px-3 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-black uppercase rounded-full">
-                        {school.plan}
-                      </span>
-                    </div>
                     <div className="lg:col-span-2 hidden lg:flex lg:justify-center">
                       <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                        {school.status}
+                        Active
                       </div>
                     </div>
                     <div className="lg:hidden flex flex-col gap-2 text-xs text-on-surface-variant">
                       <span className="w-fit px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
-                        {school.status}
+                        Active
                       </span>
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
                         <span>{school.location}</span>
                       </div>
-                      <span className="w-fit px-2 py-1 rounded-full bg-tertiary-container text-on-tertiary-container font-bold uppercase">
-                        {school.plan}
-                      </span>
+                      
                     </div>
                     <div className="lg:col-span-1 hidden lg:flex justify-end">
-                      <button className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all">
-                        <EllipsisVertical className="material-symbols-outlined" />
+                      <button onClick={() => openEditModal(school)} className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all">
+                        <Edit className="material-symbols-outlined" />
                       </button>
                     </div>
                   </div>
@@ -302,7 +339,7 @@ const SuperAdminSchools = () => {
             </div>
             <div className="flex items-center justify-between pt-6 border-t border-outline-variant/10">
               <p className="text-xs font-bold text-on-surface-variant/60 uppercase tracking-widest">
-                Showing 1-10 of 128 schools
+                Showing 1-10 of {schools.length} schools
               </p>
               <div className="flex gap-2">
                 <button className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors">
@@ -348,6 +385,126 @@ const SuperAdminSchools = () => {
             </button>
           </div>
         </section>
+
+        {mode && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
+            <form
+              onSubmit={
+                mode === "edit" ? handleUpdateSchool : handleCreateSchool
+              }
+              className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-8 duration-500"
+            >
+              <div className="px-8 py-6 border-b border-zinc-100 flex items-center justify-between bg-emerald-50/10">
+                <div>
+                  <h3 className="text-2xl font-bold text-primary">
+                    {mode === "edit" ? "Update School" : "Add New School"}
+                  </h3>
+                  <p className="text-sm text-zinc-500 mt-1">
+                    Enter school details
+                  </p>
+                </div>
+                <button
+                  className="text-zinc-400 hover:text-zinc-600 transition-colors"
+                  onClick={closeModal}
+                  type="button"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <label className="font-bold text-on-surface-variant text-sm">
+                    School Name
+                  </label>
+                  <input
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                    placeholder="e.g. West Coast Hill School"
+                    type="text"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <label className="font-bold text-on-surface-variant text-sm">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Nairobi"
+                      value={formData.location}
+                      onChange={(e) =>
+                        setFormData({ ...formData, location: e.target.value })
+                      }
+                      className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="font-bold text-on-surface-variant text-sm">
+                      Contact Email
+                    </label>
+                    <input
+                      className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                      type="email"
+                      placeholder=""
+                      value={formData.contactEmail}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          contactEmail: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <label className="font-bold text-on-surface-variant text-sm">
+                      Contact Phone
+                    </label>
+                    <input
+                      value={formData.contactPhone}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          contactPhone: e.target.value,
+                        })
+                      }
+                      className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none"
+                      placeholder=""
+                      type="number"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-8 py-6 bg-zinc-50 border-t border-zinc-100 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-6 py-3 text-zinc-600 font-bold hover:bg-zinc-200 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-primary hover:bg-emerald-900 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95"
+                >
+                  {mode === "edit" ? "Update School" : "Save School"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </main>
     </div>
   );

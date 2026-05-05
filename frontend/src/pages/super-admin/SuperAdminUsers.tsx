@@ -5,6 +5,7 @@ import {
   ArrowDownWideNarrow,
   ChevronsLeft,
   ChevronsRight,
+  Edit,
   EllipsisVertical,
   Mail,
   UserPlus,
@@ -14,6 +15,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import api from "../../../utils/api";
+import EmptyState from "@/components/ui/layout/EmptyState";
 
 interface User {
   id: number;
@@ -28,30 +30,37 @@ const SuperAdminUsers = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "",
+  });
+  const [editingFieldId, setEditingFieldId] = useState<number | null>(null);
+  const [mode, setMode] = useState<"create" | "edit" | null>(null);
 
- const stats = [
-  {
-    label: "Total Users",
-    value: users.length,
-    icon: Users,
-    iconClassName: "bg-primary text-foreground",
-    span: "All registered users",
-  },
-  {
-    label: "Active Sessions",
-    value: "—",
-    icon: Zap,
-    iconClassName: "bg-primary text-foreground",
-    span: "Coming soon",
-  },
-  {
-    label: "Pending Invitations",
-    value: "—",
-    icon: Mail,
-    iconClassName: "bg-primary text-foreground",
-    span: "Coming soon",
-  },
-];
+  const stats = [
+    {
+      label: "Total Users",
+      value: users.length,
+      icon: Users,
+      iconClassName: "bg-primary text-foreground",
+      span: "All registered users",
+    },
+    {
+      label: "Active Sessions",
+      value: "—",
+      icon: Zap,
+      iconClassName: "bg-primary text-foreground",
+      span: "Coming soon",
+    },
+    {
+      label: "Pending Invitations",
+      value: "—",
+      icon: Mail,
+      iconClassName: "bg-primary text-foreground",
+      span: "Coming soon",
+    },
+  ];
   // const users = [
   //   {
   //     id: 1,
@@ -65,24 +74,45 @@ const SuperAdminUsers = () => {
   //   },
   // ];
 
+  const openEditModal = (user: User) => {
+    setFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      
+    });
+    setEditingFieldId(user.id);
+    setMode("edit");
+  };
+
+  const closeModal = () => {
+    setMode(null);
+    setEditingFieldId(null);
+
+    setFormData({
+      name: "",
+      email: "",
+      role: "",
+    });
+  };
+
   useEffect(() => {
     const fetchUsers = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const response = await api.get('/users')
-        setUsers(response.data)
-        
+        const response = await api.get("/users");
+        setUsers(response.data);
       } catch (error) {
-        if(axios.isAxiosError(error)){
-          toast.error(error?.response?.data.message || 'Something went wrong')
+        if (axios.isAxiosError(error)) {
+          toast.error(error?.response?.data.message || "Something went wrong");
         }
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchUsers()
-  }, [])
+    fetchUsers();
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -160,68 +190,86 @@ const SuperAdminUsers = () => {
             </div>
             <div className="space-y-3">
               <div className="hidden lg:grid grid-cols-12 px-6 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-on-surface-variant/50">
-                <div className="col-span-4">User Name</div>
+                <div className="col-span-3">User Name</div>
+                <div className="col-span-3">Email</div>
                 <div className="col-span-2">Role</div>
-                <div className="col-span-3">Last login</div>
-                <div className="col-span-2 text-center">Status</div>
+                <div className="col-span-2">Created Date</div>
+                <div className="col-span-1 text-center">Status</div>
                 <div className="col-span-1 text-right">Actions</div>
               </div>
-              {users.map((user) => (
-                <div
-                  key={user.id}
-                  className="relative flex flex-col gap-3 px-4 py-4 pr-12 sm:px-6 sm:py-5 bg-surface-container-lowest rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-lg hover:shadow-primary/5 transition-all group bg-card lg:grid lg:grid-cols-12 lg:items-center lg:pr-6"
-                >
-                  <button className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden">
-                    <EllipsisVertical className="material-symbols-outlined" />
-                  </button>
-                  <div className="lg:col-span-4 flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-background overflow-hidden shrink-0">
-                      <img
-                        alt={`${user.name} logo`}
-                        className="w-full h-full object-cover"
-                        src={`https://ui-avatars.com/api/?name=${user.name}`}                      />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-on-surface group-hover:text-primary transition-colors">
-                        {user.name}
-                      </h4>
-                    </div>
-                  </div>
-                  <div className="lg:col-span-2 hidden lg:block">
-                    <p className="text-sm font-semibold text-on-surface">
-                      {user.role}
-                    </p>
-                  </div>
-                  <div className="lg:col-span-3 hidden lg:block">
-                    <p className="text-sm font-semibold text-on-surface">
-                      {new Date(user.createdAt).toLocaleDateString()}                    </p>
-                  </div>
-
-                  <div className="lg:col-span-2 hidden lg:flex lg:justify-center">
-                    <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                      {/* Temporary solution */}
-                      {/* Temporary solution */}
-                      Active
-                    </div>
-                  </div>
-                  <div className="lg:hidden flex flex-col gap-2 text-xs text-on-surface-variant">
-                    <span className="w-fit px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
-                      {/* Temporary solution */}
-                      Active
-                    </span>
-                  </div>
-                  <div className="lg:col-span-1 hidden lg:flex justify-end">
-                    <button className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all">
-                      <EllipsisVertical className="material-symbols-outlined" />
-                    </button>
-                  </div>
+              {users.length === 0 ? (
+                <div className="p-12">
+                  <EmptyState
+                    title="No Users registered"
+                    description="There are currently no users in the system. Start by adding a new user to begin monitoring."
+                    icon={Users}
+                    actionLabel="Add New User"
+                    // onAction={openCreateModal}
+                  />
                 </div>
-              ))}
+              ) : (
+                users.map((user) => (
+                  <div
+                    key={user.id}
+                    className="relative flex flex-col gap-3 px-4 py-4 pr-12 sm:px-6 sm:py-5 bg-surface-container-lowest rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-lg hover:shadow-primary/5 transition-all group bg-card lg:grid lg:grid-cols-12 lg:items-center lg:pr-6"
+                  >
+                    <button className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden">
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <div className="lg:col-span-3 flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-background overflow-hidden shrink-0">
+                        <img
+                          alt={`${user.name} logo`}
+                          className="w-full h-full object-cover"
+                          src={`https://ui-avatars.com/api/?name=${user.name}`}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-on-surface group-hover:text-primary transition-colors">
+                          {user.name}
+                        </h4>
+                      </div>
+                    </div>
+                    <div className="lg:col-span-3 hidden lg:block text-sm text-on-surface-variant truncate">
+                      {user.email}
+                    </div>
+                    <div className="lg:col-span-2 hidden lg:block">
+                      <p className="text-sm font-semibold text-on-surface">
+                        {user.role}
+                      </p>
+                    </div>
+                    <div className="lg:col-span-2 hidden lg:block">
+                      <p className="text-sm font-semibold text-on-surface">
+                        {new Date(user.createdAt).toLocaleDateString()}{" "}
+                      </p>
+                    </div>
+
+                    <div className="lg:col-span-1 hidden lg:flex lg:justify-center">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                        {/* Temporary solution */}
+                        {/* Temporary solution */}
+                        Active
+                      </div>
+                    </div>
+                    <div className="lg:hidden flex flex-col gap-2 text-xs text-on-surface-variant">
+                      <span className="w-fit px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
+                        {/* Temporary solution */}
+                        Active
+                      </span>
+                    </div>
+                    <div className="lg:col-span-1 hidden lg:flex justify-end">
+                      <button onClick={() => openEditModal(user)} className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
             <div className="flex items-center justify-between pt-6 border-t border-outline-variant/10">
               <p className="text-xs font-bold text-on-surface-variant/60 uppercase tracking-widest">
-                Showing 1-10 of 128 users
+                Showing 1-10 of {users.length} users
               </p>
               <div className="flex gap-2">
                 <button className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors">
@@ -245,7 +293,6 @@ const SuperAdminUsers = () => {
               </div>
             </div>
           </div>
-
         </section>
       </main>
     </div>
@@ -253,5 +300,3 @@ const SuperAdminUsers = () => {
 };
 
 export default SuperAdminUsers;
-
-

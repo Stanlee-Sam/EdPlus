@@ -1,62 +1,137 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
-import { GraduationCap } from "lucide-react";
+import { Edit, EllipsisVertical, GraduationCap, School, X } from "lucide-react";
 import { Users } from "lucide-react";
-import { CirclePlus } from 'lucide-react';
+import { CirclePlus } from "lucide-react";
 import api from "../../../utils/api";
 import axios from "axios";
 import { toast } from "sonner";
+import EmptyState from "@/components/ui/layout/EmptyState";
 
 interface School {
-  id : number;
-  name : string;
-  location : string;
+  id: number;
+  name: string;
+  location: string;
+  contactEmail: string;
+  contactPhone: string;
 }
 
 const SuperAdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [users, setUsers] = useState([]);
   const [schools, setSchools] = useState<School[]>([]);
-  const [loading, setLoading] = useState(false);  
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    contactEmail: "",
+    location: "",
+    contactPhone: "",
+  });
+  const [editingFieldId, setEditingFieldId] = useState<number | null>(null);
+  const [mode, setMode] = useState<"create" | "edit" | null>(null);
 
   useEffect(() => {
-  const fetchSchools = async () => {
+    const fetchSchools = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get("/schools");
+        setSchools(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(
+            error.response?.data?.message || "Failed to load schools data",
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchools();
+  }, []);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await api.get("/users");
+        setUsers(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(
+            error.response?.data?.message || "Failed to load schools data",
+          );
+        }
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const openCreateModal = () => {
+    setFormData({
+      name: "",
+      contactEmail: "",
+      location: "",
+      contactPhone: "",
+    });
+    setMode("create");
+  };
+  const openEditModal = (school: School) => {
+    setFormData({
+      name: school.name,
+      location: school.location,
+      contactEmail: school.contactEmail,
+      contactPhone: school.contactPhone,
+    });
+    setEditingFieldId(school.id);
+    setMode("edit");
+  };
+
+  const closeModal = () => {
+    setMode(null);
+    setEditingFieldId(null);
+
+    setFormData({
+      name: "",
+      contactEmail: "",
+      location: "",
+      contactPhone: "",
+    });
+  };
+
+  const handleCreateSchool = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
     setLoading(true);
-      try {
-      const response = await api.get('/schools')
-      setSchools(response.data);
-      
+    try {
+      const response = await api.post("/schools", formData);
+      setSchools((prev) => [response.data, ...prev]);
+      toast.success("School created successfully");
+      closeModal();
     } catch (error) {
-      if(axios.isAxiosError(error)){
-        toast.error(error.response?.data?.message || 'Failed to load schools data');
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Failed to create school");
       }
     } finally {
       setLoading(false);
     }
-  }
+  };
+  const handleUpdateSchool = async ( e : React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
 
-  fetchSchools();
-    
-  }, [])
-
-  useEffect(() => {
-     const fetchUsers = async () => {
-      try {
-      const response = await api.get('/users')
-      setUsers(response.data);
+    try {
+      const response = await api.put(`/schools/${editingFieldId}`, formData)
+      setSchools((prevSchools) =>  prevSchools.map((prevSchool) => prevSchool.id === editingFieldId ? {...prevSchool, ...response.data} : prevSchool))
       
+      toast.success("School updated successfully")
+      closeModal()
     } catch (error) {
       if(axios.isAxiosError(error)){
-        toast.error(error.response?.data?.message || 'Failed to load schools data');
+        toast.error(error.response?.data?.message || "")
       }
     }
-  }
-
-  fetchUsers();
-    
-  }, [])
+  };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -224,115 +299,62 @@ const SuperAdminDashboard = () => {
                       New Schools
                     </h4>
                     <p className="text-xs text-primary font-bold">
-                      7 in last 30 days
+                      {schools.length} in last 30 days
                     </p>
                   </div>
-                  <button className="text-xs font-bold text-on-surface-variant hover:text-on-surface transition-colors">
+                  <a
+                    href="/superadmin-schools"
+                    className="text-xs font-bold text-on-surface-variant hover:text-on-surface transition-colors"
+                  >
                     View All
-                  </button>
+                  </a>
                 </div>
                 <div className="space-y-6">
-                  {
-                  schools.length === 0 ? (
-                    <div>
-                      <p className="text-sm font-bold text-on-surface">
-                        No schools found
-                      </p>
+                  {schools.length === 0 ? (
+                    <div className="p-12">
+                      <EmptyState
+                        title="No Schools registered"
+                        description="There are currently no schools in the system. Start by adding a new field to begin monitoring."
+                        icon={School}
+                        actionLabel="Add New School"
+                        // onAction={openCreateModal}
+                      />
                     </div>
-                  ) :
-                  schools.map((school) => (
-                     <div key={school.id} className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
-                      
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-on-surface">
-                        {school.name}
-                      </p>
-                      <p className="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider">
-                        {school.location}
-                      </p>
-                    </div>
-                    <span className="text-[10px] text-outline-variant font-medium">
-                      2d ago
-                    </span>
-                  </div>
-                  ))}
-                  <div className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
-                      
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-on-surface">
-                        St. Mary's Academy
-                      </p>
-                      <p className="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider">
-                        Enterprise Plan
-                      </p>
-                    </div>
-                    <span className="text-[10px] text-outline-variant font-medium">
-                      2d ago
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
-                      
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-on-surface">
-                        Riverbend High
-                      </p>
-                      <p className="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider">
-                        Standard Plan
-                      </p>
-                    </div>
-                    <span className="text-[10px] text-outline-variant font-medium">
-                      5d ago
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
-                      
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-on-surface">
-                        Oakwood STEM Institute
-                      </p>
-                      <p className="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider">
-                        Enterprise Plan
-                      </p>
-                    </div>
-                    <span className="text-[10px] text-outline-variant font-medium">
-                      1w ago
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 group">
-                    <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
-                      
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-on-surface">
-                        The Arts Collegiate
-                      </p>
-                      <p className="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider">
-                        Standard Plan
-                      </p>
-                    </div>
-                    <span className="text-[10px] text-outline-variant font-medium">
-                      1w ago
-                    </span>
-                  </div>
+                  ) : (
+                    schools.map((school) => (
+                      <div
+                        key={school.id}
+                        className="flex items-center gap-4 group"
+                      >
+                        <div className="w-12 h-12 rounded-lg bg-sidebar flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
+                          <School className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-on-surface">
+                            {school.name}
+                          </p>
+                          <p className="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider">
+                            {school.location}
+                          </p>
+                        </div>
+                        <span onClick={() => openEditModal(school)} className="text-[10px] text-outline-variant font-medium">
+                          <Edit />
+                        </span> 
+                      </div>
+                    ))
+                  )}
                 </div>
                 <div className="mt-8 p-6 bg-sidebar rounded-lg border-dashed border-2 border-outline-variant/20 flex flex-col items-center text-center">
-                  <span
-                    className="material-symbols-outlined text-outline-variant mb-2"
-                  >
+                  <span className="material-symbols-outlined text-outline-variant mb-2">
                     <CirclePlus />
                   </span>
                   <p className="text-xs font-bold text-on-surface mb-4">
                     Onboard New School
                   </p>
-                  <button className="w-full cursor-pointer py-3 primary-gradient text-on-primary rounded-lg text-xs font-bold shadow-lg shadow-primary/20">
+                  <button
+                    onClick={openCreateModal}
+                    className="w-full cursor-pointer py-3 primary-gradient text-on-primary rounded-lg text-xs font-bold shadow-lg shadow-primary/20"
+                  >
                     Launch Setup
                   </button>
                 </div>
@@ -340,11 +362,129 @@ const SuperAdminDashboard = () => {
             </div>
           </div>
         </section>
+
+        {mode && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
+            <form
+              onSubmit={
+                mode === "edit" ? handleUpdateSchool : handleCreateSchool
+              }
+              className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-8 duration-500"
+            >
+              <div className="px-8 py-6 border-b border-zinc-100 flex items-center justify-between bg-emerald-50/10">
+                <div>
+                  <h3 className="text-2xl font-bold text-primary">
+                    {mode === "edit" ? "Update School" : "Add New School"}
+                  </h3>
+                  <p className="text-sm text-zinc-500 mt-1">
+                    Enter school details
+                  </p>
+                </div>
+                <button
+                  className="text-zinc-400 hover:text-zinc-600 transition-colors"
+                  onClick={closeModal}
+                  type="button"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <label className="font-bold text-on-surface-variant text-sm">
+                    School Name
+                  </label>
+                  <input
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                    placeholder="e.g. West Coast Hill School"
+                    type="text"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <label className="font-bold text-on-surface-variant text-sm">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Nairobi"
+                      value={formData.location}
+                      onChange={(e) =>
+                        setFormData({ ...formData, location: e.target.value })
+                      }
+                      className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="font-bold text-on-surface-variant text-sm">
+                      Contact Email
+                    </label>
+                    <input
+                      className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                      type="email"
+                      placeholder=""
+                      value={formData.contactEmail}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          contactEmail: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <label className="font-bold text-on-surface-variant text-sm">
+                      Contact Phone
+                    </label>
+                    <input
+                      value={formData.contactPhone}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          contactPhone: e.target.value,
+                        })
+                      }
+                      className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none"
+                      placeholder=""
+                      type="number"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-8 py-6 bg-zinc-50 border-t border-zinc-100 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-6 py-3 text-zinc-600 font-bold hover:bg-zinc-200 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-primary hover:bg-emerald-900 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-md active:scale-95"
+                >
+                  {mode === "edit" ? "Update School" : "Save School"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </main>
     </div>
   );
 };
 
 export default SuperAdminDashboard;
-
-

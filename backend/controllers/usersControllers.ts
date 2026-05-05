@@ -40,6 +40,12 @@ const registerSchema = z.object({
   phone: z.string(),
 });
 
+const userIdSchema = z.string().uuid();
+const updateRoleSchema = z.object({
+  userId: z.string(),
+  role: z.enum(["ADMIN", "TEACHER", "PARENT"]),
+});
+
 export const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
@@ -137,3 +143,41 @@ export const loginUser = async (
     res.status(500).json({ message });
   }
 };
+
+export const updateUserRole = async (req: Request<{id: string}, {}, unknown>, res: Response) => {
+  try {
+    const parsed = updateRoleSchema.safeParse(req.body);
+    const userIdParsed = userIdSchema.safeParse(req.params.id);
+
+    if(!parsed.success){
+      return res.status(400).json({
+        message : "Validation failed",
+        errors : parsed.error.flatten().fieldErrors,
+      })
+    }
+    
+    if(!userIdParsed.success){
+      return res.status(400).json({
+        message : "Invalid User ID",
+      })
+    }
+    
+    const {userId, role} = parsed.data;
+    const user = await prisma.user.findUnique({
+      where : {id : userId}
+    });
+    if(!user){
+      return res.status(404).json({message : "User not found"})
+    }
+    const updatedUser = await prisma.user.update({
+      where : {id : userId},
+      data : {role}
+    })
+    res.status(200).json({message : "User role updated successfully", updatedUser})
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error updating user role:", message);
+    res.status(500).json({ message });
+    
+  }
+}
