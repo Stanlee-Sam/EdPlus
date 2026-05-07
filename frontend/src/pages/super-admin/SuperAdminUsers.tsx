@@ -16,9 +16,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import api from "../../../utils/api";
 import EmptyState from "@/components/ui/layout/EmptyState";
+import { data } from "react-router";
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string;
@@ -35,7 +36,7 @@ const SuperAdminUsers = () => {
     email: "",
     role: "",
   });
-  const [editingFieldId, setEditingFieldId] = useState<number | null>(null);
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [mode, setMode] = useState<"create" | "edit" | null>(null);
 
   const stats = [
@@ -79,7 +80,6 @@ const SuperAdminUsers = () => {
       name: user.name,
       email: user.email,
       role: user.role,
-      
     });
     setEditingFieldId(user.id);
     setMode("edit");
@@ -113,6 +113,34 @@ const SuperAdminUsers = () => {
 
     fetchUsers();
   }, []);
+
+  const updateUserRole = async () => {
+    if (!editingFieldId) return;
+
+    setLoading(true);
+    try {
+      const response = await api.patch(`/users/${editingFieldId}/role`, {
+        userId: editingFieldId,
+        role: formData.role,
+      });
+
+      setUsers(
+        users.map((user) =>
+          user.id === editingFieldId ? { ...user, role: formData.role } : user,
+        ),
+      );
+      closeModal();
+      toast.success("User role updated successfully!");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(
+          error?.response?.data.message || "Failed to update user role!",
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -213,7 +241,7 @@ const SuperAdminUsers = () => {
                     key={user.id}
                     className="relative flex flex-col gap-3 px-4 py-4 pr-12 sm:px-6 sm:py-5 bg-surface-container-lowest rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-lg hover:shadow-primary/5 transition-all group bg-card lg:grid lg:grid-cols-12 lg:items-center lg:pr-6"
                   >
-                    <button className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden">
+                    <button onClick={() => openEditModal(user)} className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden">
                       <Edit className="w-4 h-4" />
                     </button>
                     <div className="lg:col-span-3 flex items-center gap-3">
@@ -230,10 +258,10 @@ const SuperAdminUsers = () => {
                         </h4>
                       </div>
                     </div>
-                    <div className="lg:col-span-3 hidden lg:block text-sm text-on-surface-variant truncate">
+                    <div className="lg:col-span-3  lg:block text-sm text-on-surface-variant truncate">
                       {user.email}
                     </div>
-                    <div className="lg:col-span-2 hidden lg:block">
+                    <div className="lg:col-span-2  lg:block">
                       <p className="text-sm font-semibold text-on-surface">
                         {user.role}
                       </p>
@@ -259,7 +287,10 @@ const SuperAdminUsers = () => {
                       </span>
                     </div>
                     <div className="lg:col-span-1 hidden lg:flex justify-end">
-                      <button onClick={() => openEditModal(user)} className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all">
+                      <button
+                        onClick={() => openEditModal(user)}
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all"
+                      >
                         <Edit className="w-4 h-4" />
                       </button>
                     </div>
@@ -294,6 +325,65 @@ const SuperAdminUsers = () => {
             </div>
           </div>
         </section>
+        {/* Edit Role Modal */}
+        {mode === "edit" && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-card w-full max-w-md rounded-2xl border border-border/40 p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold">Edit User Role</h3>
+                <button
+                  onClick={closeModal}
+                  className="text-on-surface-variant hover:text-primary"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold uppercase text-on-surface-variant/60 block mb-1">
+                    User Name
+                  </label>
+                  <p className="font-semibold text-lg">{formData.name}</p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase text-on-surface-variant/60 block mb-1">
+                    Select New Role
+                  </label>
+                  <select
+                    className="w-full bg-background border border-border/40 rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary/20"
+                    value={formData.role}
+                    onChange={(e) =>
+                      setFormData({ ...formData, role: e.target.value })
+                    }
+                  >
+                    <option value="SUPER_ADMIN">Super Admin</option>
+                    <option value="SCHOOL_ADMIN">School Admin</option>
+                    <option value="TEACHER">Teacher</option>
+                    <option value="PARENT">Parent</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={closeModal}
+                    className="flex-1 px-6 py-3 rounded-lg font-bold border border-border/40 hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={updateUserRole}
+                    disabled={loading}
+                    className="flex-1 primary-gradient text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform active:scale-95 disabled:opacity-50"
+                  >
+                    {loading ? "Updating..." : "Save Changes"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

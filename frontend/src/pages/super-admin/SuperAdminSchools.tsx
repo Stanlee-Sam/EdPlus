@@ -284,8 +284,8 @@ const SuperAdminSchools = () => {
                     key={school.id}
                     className="relative flex flex-col gap-3 px-4 py-4 pr-12 sm:px-6 sm:py-5 bg-surface-container-lowest rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-lg hover:shadow-primary/5 transition-all group bg-card lg:grid lg:grid-cols-12 lg:items-center lg:pr-6"
                   >
-                    <button className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden">
-                      <EllipsisVertical className="material-symbols-outlined" />
+                    <button onClick={() => openEditModal(school)} className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden">
+                      <Edit className="material-symbols-outlined" />
                     </button>
                     <div className="lg:col-span-4 flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center">

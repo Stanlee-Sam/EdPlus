@@ -22,7 +22,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-  methods : ['POST', 'GET', 'PUT', 'DELETE'],
+  methods : ['POST', 'GET', 'PUT', 'DELETE', 'PATCH'],
   origin : '*',
   credentials : true
 }));

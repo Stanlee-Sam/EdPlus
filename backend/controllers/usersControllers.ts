@@ -43,7 +43,7 @@ const registerSchema = z.object({
 const userIdSchema = z.string().uuid();
 const updateRoleSchema = z.object({
   userId: z.string(),
-  role: z.enum(["ADMIN", "TEACHER", "PARENT"]),
+  role: z.enum(["SUPER_ADMIN", "SCHOOL_ADMIN", "TEACHER", "PARENT"]),
 });
 
 export const getUsers = async (req: Request, res: Response) => {
