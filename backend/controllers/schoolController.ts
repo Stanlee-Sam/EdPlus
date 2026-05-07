@@ -1,11 +1,9 @@
 import { z } from "zod";
 import type { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import prismaPkg from "../generated/prisma/client.js";
 
-const PrismaClient = (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-
 const prisma = new PrismaClient({ adapter });
 
 const schoolSchema = z.object({
@@ -13,6 +11,7 @@ const schoolSchema = z.object({
   location: z.string(),
   contactEmail: z.string().email(),
   contactPhone: z.string(),
+  principalId: z.string().uuid().optional().nullable(),
 });
 
 const schoolIdSchema = z.string().uuid();
@@ -20,7 +19,15 @@ const schoolIdSchema = z.string().uuid();
 export const getSchools = async (req: Request, res: Response) => {
   try {
     const schools = await prisma.school.findMany({
-      where : {isDeleted : false}
+      where : {isDeleted : false},
+      include: {
+        principal: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
     });
     res.status(200).json(schools);
   } catch (error: unknown) {
@@ -43,7 +50,7 @@ export const createSchool = async (
       });
     }
 
-    const { name, location, contactEmail, contactPhone } = parsed.data;
+    const { name, location, contactEmail, contactPhone, principalId } = parsed.data;
 
     const newSchool = await prisma.school.create({
       data: {
@@ -51,7 +58,16 @@ export const createSchool = async (
         location,
         contactEmail,
         contactPhone,
+        principalId: principalId || null,
       },
+      include: {
+        principal: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
     });
 
     res.status(201).json({ message: "School created successfully", newSchool });
@@ -84,7 +100,7 @@ export const updateSchool = async (
     }
 
     const schoolId = schoolIdParsed.data;
-    const { name, location, contactEmail, contactPhone } = parsed.data;
+    const { name, location, contactEmail, contactPhone, principalId } = parsed.data;
 
     const existingSchool = await prisma.school.findFirst({
       where: { id: schoolId, isDeleted : false },
@@ -101,7 +117,16 @@ export const updateSchool = async (
         location,
         contactEmail,
         contactPhone,
+        principalId: principalId || null,
       },
+      include: {
+        principal: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
     });
 
     res

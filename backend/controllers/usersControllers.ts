@@ -4,12 +4,10 @@ import jwt from "jsonwebtoken";
 import type { Role } from "../generated/prisma/client.js";
 import { z } from "zod";
 import type { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import prismaPkg from "../generated/prisma/client.js";
 
-const PrismaClient = (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-
 const prisma = new PrismaClient({ adapter });
 
 type TokenUser = {
@@ -48,7 +46,13 @@ const updateRoleSchema = z.object({
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
+    const { schoolId, role } = req.query;
+    
     const users = await prisma.user.findMany({
+      where: {
+        ...(schoolId ? { schoolId: String(schoolId) } : {}),
+        ...(role ? { role: role as any } : {}),
+      },
       select: {
         id: true,
         name: true,

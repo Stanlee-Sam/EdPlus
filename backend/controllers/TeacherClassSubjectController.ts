@@ -1,12 +1,9 @@
 import { z } from "zod";
 import type { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import * as prismaPkg from "../generated/prisma/client.js";
 
-const PrismaClient = (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
-const { Prisma } = prismaPkg as unknown as { Prisma: typeof prismaPkg.Prisma };
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-
 const prisma = new PrismaClient({ adapter });
 
 const teacherClassSubjectIdSchema = z.string().uuid();

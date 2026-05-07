@@ -27,6 +27,13 @@ interface User {
   createdAt: string;
 }
 
+const roleLabels: Record<string, string> = {
+  SUPER_ADMIN: "Super Admin",
+  SCHOOL_ADMIN: "School Admin",
+  TEACHER: "Teacher",
+  PARENT: "Parent",
+};
+
 const SuperAdminUsers = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
@@ -241,7 +248,10 @@ const SuperAdminUsers = () => {
                     key={user.id}
                     className="relative flex flex-col gap-3 px-4 py-4 pr-12 sm:px-6 sm:py-5 bg-surface-container-lowest rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:shadow-lg hover:shadow-primary/5 transition-all group bg-card lg:grid lg:grid-cols-12 lg:items-center lg:pr-6"
                   >
-                    <button onClick={() => openEditModal(user)} className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden">
+                    <button
+                      onClick={() => openEditModal(user)}
+                      className="absolute right-3 top-3 w-9 h-9 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all lg:hidden"
+                    >
                       <Edit className="w-4 h-4" />
                     </button>
                     <div className="lg:col-span-3 flex items-center gap-3">
@@ -258,12 +268,12 @@ const SuperAdminUsers = () => {
                         </h4>
                       </div>
                     </div>
-                    <div className="lg:col-span-3  lg:block text-sm text-on-surface-variant truncate">
+                    <div className="lg:col-span-3 hidden lg:block text-sm text-on-surface-variant truncate">
                       {user.email}
                     </div>
-                    <div className="lg:col-span-2  lg:block">
-                      <p className="text-sm font-semibold text-on-surface">
-                        {user.role}
+                    <div className="lg:col-span-2 hidden lg:block">
+                      <p className="text-[10px] font-bold text-primary   uppercase tracking-tighter">
+                        {roleLabels[user.role] || user.role}
                       </p>
                     </div>
                     <div className="lg:col-span-2 hidden lg:block">
@@ -275,16 +285,34 @@ const SuperAdminUsers = () => {
                     <div className="lg:col-span-1 hidden lg:flex lg:justify-center">
                       <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                        {/* Temporary solution */}
-                        {/* Temporary solution */}
                         Active
                       </div>
                     </div>
-                    <div className="lg:hidden flex flex-col gap-2 text-xs text-on-surface-variant">
-                      <span className="w-fit px-3 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-bold">
-                        {/* Temporary solution */}
-                        Active
-                      </span>
+                    <div className="lg:hidden flex flex-col gap-2 mt-2 pt-3 border-t border-border/40">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-on-surface-variant/60 font-medium">
+                          Email
+                        </span>
+                        <span className="text-on-surface font-semibold truncate max-w-[200px]">
+                          {user.email}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-on-surface-variant/60 font-medium">
+                          Date Joined
+                        </span>
+                        <span className="text-on-surface font-semibold">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold">
+                          Active
+                        </span>
+                        <span className="text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded border border-primary/10  tracking-tighter">
+                          {roleLabels[user.role] || user.role}
+                        </span>
+                      </div>
                     </div>
                     <div className="lg:col-span-1 hidden lg:flex justify-end">
                       <button

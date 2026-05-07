@@ -24,11 +24,16 @@ import api from "../../../utils/api";
 import EmptyState from "@/components/ui/layout/EmptyState";
 
 interface School {
-  id: number;
+  id: string;
   name: string;
   location: string;
   contactEmail: string;
   contactPhone: string;
+  principalId?: string;
+  principal?: {
+    id: string;
+    name: string;
+  };
 }
 
 const SuperAdminSchools = () => {
@@ -40,9 +45,13 @@ const SuperAdminSchools = () => {
     contactEmail: "",
     location: "",
     contactPhone: "",
+    principalId: "",
   });
-  const [editingFieldId, setEditingFieldId] = useState<number | null>(null);
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [mode, setMode] = useState<"create" | "edit" | null>(null);
+  const [schoolAdmins, setSchoolAdmins] = useState<{ id: string; name: string }[]>(
+    [],
+  );
   const stats = [
     {
       label: "Total Schools",
@@ -101,18 +110,28 @@ const SuperAdminSchools = () => {
       contactEmail: "",
       location: "",
       contactPhone: "",
+      principalId: "",
     });
     setMode("create");
   };
-  const openEditModal = (school: School) => {
+  const openEditModal = async (school: School) => {
     setFormData({
       name: school.name,
       location: school.location,
       contactEmail: school.contactEmail,
       contactPhone: school.contactPhone,
+      principalId: school.principalId || "",
     });
     setEditingFieldId(school.id);
     setMode("edit");
+
+    // Fetch potential principals (SCHOOL_ADMINs for this school)
+    try {
+      const response = await api.get(`/users?schoolId=${school.id}&role=SCHOOL_ADMIN`);
+      setSchoolAdmins(response.data);
+    } catch (error) {
+      console.error("Failed to fetch school admins", error);
+    }
   };
 
   const closeModal = () => {
@@ -124,7 +143,9 @@ const SuperAdminSchools = () => {
       contactEmail: "",
       location: "",
       contactPhone: "",
+      principalId: "",
     });
+    setSchoolAdmins([]);
   };
 
   const handleCreateSchool = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -132,8 +153,12 @@ const SuperAdminSchools = () => {
 
     setLoading(true);
     try {
-      const response = await api.post("/schools", formData);
-      setSchools((prev) => [response.data, ...prev]);
+      const dataToSubmit = {
+        ...formData,
+        principalId: formData.principalId || null,
+      };
+      const response = await api.post("/schools", dataToSubmit);
+      setSchools((prev) => [response.data.newSchool, ...prev]);
       toast.success("School created successfully");
       closeModal();
     } catch (error) {
@@ -148,11 +173,15 @@ const SuperAdminSchools = () => {
     e.preventDefault();
 
     try {
-      const response = await api.put(`/schools/${editingFieldId}`, formData);
+      const dataToSubmit = {
+        ...formData,
+        principalId: formData.principalId || null,
+      };
+      const response = await api.put(`/schools/${editingFieldId}`, dataToSubmit);
       setSchools((prevSchools) =>
         prevSchools.map((prevSchool) =>
           prevSchool.id === editingFieldId
-            ? { ...prevSchool, ...response.data }
+            ? { ...prevSchool, ...response.data.updatedSchool }
             : prevSchool,
         ),
       );
@@ -302,10 +331,10 @@ const SuperAdminSchools = () => {
                     </div>
                     <div className="lg:col-span-2 hidden lg:block">
                       <p className="text-sm font-semibold text-on-surface">
-                        {school.admin}
+                        {school.principal?.name || "No Principal"}
                       </p>
                       <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">
-                        {school.role}
+                        {school.principal ? "Principal" : "Unassigned"}
                       </p>
                     </div>
                     <div className="lg:col-span-2 hidden lg:flex items-center gap-1.5 text-on-surface-variant text-sm">
@@ -484,6 +513,31 @@ const SuperAdminSchools = () => {
                       required
                     />
                   </div>
+
+                  {mode === "edit" && (
+                    <div className="space-y-2">
+                      <label className="font-bold text-on-surface-variant text-sm">
+                        Designated Principal
+                      </label>
+                      <select
+                        value={formData.principalId}
+                        onChange={(e) =>
+                          setFormData({ ...formData, principalId: e.target.value })
+                        }
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                      >
+                        <option value="">Select a Principal</option>
+                        {schoolAdmins.map((admin) => (
+                          <option key={admin.id} value={admin.id}>
+                            {admin.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-zinc-500">
+                        Only users with the "School Admin" role are listed here.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 

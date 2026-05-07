@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -63,6 +62,9 @@ model School {
   notifications        Notification[]
   termSummaries        TermSummary[]
 
+  principalId String? @unique
+  principal   User?   @relation("SchoolPrincipal", fields: [principalId], references: [id])
+
   deletedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -87,6 +89,7 @@ model User {
   announcements        Announcement[]
   notifications        Notification[]
   teacherClassSubjects TeacherClassSubject[]
+  principalOf          School?               @relation("SchoolPrincipal")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
