@@ -12,7 +12,6 @@ const feeStructureSchema = z.object({
   amount: z.number().int(),
   levelId: z.string().uuid(),
   termId: z.string().uuid(),
-  schoolId: z.string().uuid(),
 });
 
 const feeStructureIdSchema = z.string().uuid();
@@ -21,6 +20,15 @@ const termIdSchema = z.string().uuid();
 
 export const createFeeStructure = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can create fee structures." });
+    }
+
     const parsed = feeStructureSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -32,52 +40,43 @@ export const createFeeStructure = async (req: Request, res: Response) => {
         });
     }
 
-    const { amount, levelId, termId, schoolId } = parsed.data;
+    const { amount, levelId, termId } = parsed.data;
 
     const existingFeeStructure = await prisma.feeStructure.findFirst({
       where: {
         levelId,
         termId,
-        schoolId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (existingFeeStructure) {
-      return res.status(400).json({ message: "Fee structure already exists" });
+      return res.status(400).json({ message: "Fee structure already exists for this level and term" });
     }
 
     const existingLevel = await prisma.level.findFirst({
       where: {
         id: levelId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingLevel) {
-      return res.status(404).json({ message: "Level does not exist" });
+      return res.status(404).json({ message: "Level does not exist in your school" });
     }
 
     const existingTerm = await prisma.term.findFirst({
       where: {
         id: termId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingTerm) {
-      return res.status(404).json({ message: "Term does not exist" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
+      return res.status(404).json({ message: "Term does not exist in your school" });
     }
 
     const feeStructure = await prisma.feeStructure.create({
@@ -85,7 +84,7 @@ export const createFeeStructure = async (req: Request, res: Response) => {
         amount,
         levelId,
         termId,
-        schoolId,
+        schoolId: userSchoolId as string,
       },
     });
 
@@ -99,9 +98,15 @@ export const createFeeStructure = async (req: Request, res: Response) => {
 
 export const getFeeStructures = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const feeStructures = await prisma.feeStructure.findMany({
       where: {
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
     res.status(200).json({ feeStructures });
@@ -117,6 +122,10 @@ export const getFeeStructure = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const feeStructureIdParsed = feeStructureIdSchema.safeParse(req.params.id);
 
     if (!feeStructureIdParsed.success) {
@@ -129,11 +138,12 @@ export const getFeeStructure = async (
       where: {
         id: feeStructureId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!feeStructure) {
-      return res.status(404).json({ message: "Fee structure not found" });
+      return res.status(404).json({ message: "Fee structure not found in your school" });
     }
 
     res.status(200).json(feeStructure);
@@ -143,11 +153,16 @@ export const getFeeStructure = async (
     res.status(500).json({ message });
   }
 };
+
 export const getLevelFeeStructure = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const levelIdParsed = levelIdSchema.safeParse(req.params.id);
 
     if (!levelIdParsed.success) {
@@ -160,17 +175,19 @@ export const getLevelFeeStructure = async (
       where: {
         id: levelId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!existingLevel) {
-      return res.status(404).json({ message: "Level not found" });
+      return res.status(404).json({ message: "Level not found in your school" });
     }
 
     const feeStructures = await prisma.feeStructure.findMany({
       where: {
         levelId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
@@ -187,6 +204,10 @@ export const getTermFeeStructure = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const termIdParsed = termIdSchema.safeParse(req.params.id);
 
     if (!termIdParsed.success) {
@@ -199,17 +220,19 @@ export const getTermFeeStructure = async (
       where: {
         id: termId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!existingTerm) {
-      return res.status(404).json({ message: "Term not found" });
+      return res.status(404).json({ message: "Term not found in your school" });
     }
 
     const feeStructures = await prisma.feeStructure.findMany({
       where: {
         termId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
@@ -226,6 +249,15 @@ export const updateFeeStructure = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can update fee structures." });
+    }
+
     const feeStructureIdParsed = feeStructureIdSchema.safeParse(req.params.id);
     const parsed = feeStructureSchema.safeParse(req.body);
 
@@ -241,51 +273,19 @@ export const updateFeeStructure = async (
         });
     }
 
-    const { amount, levelId, termId, schoolId } = parsed.data;
+    const { amount, levelId, termId } = parsed.data;
     const feeStructureId = feeStructureIdParsed.data;
 
     const existingFeeStructure = await prisma.feeStructure.findFirst({
       where: {
         id: feeStructureId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingFeeStructure) {
-      return res.status(404).json({ message: "Fee structure not found" });
-    }
-
-    const existingLevel = await prisma.level.findFirst({
-      where: {
-        id: levelId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingLevel) {
-      return res.status(404).json({ message: "Level not found" });
-    }
-
-    const existingTerm = await prisma.term.findFirst({
-      where: {
-        id: termId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingTerm) {
-      return res.status(404).json({ message: "Term not found" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School not found" });
+      return res.status(404).json({ message: "Fee structure not found in your school" });
     }
 
     const updatedFeeStructure = await prisma.feeStructure.update({
@@ -296,7 +296,6 @@ export const updateFeeStructure = async (
         amount,
         levelId,
         termId,
-        schoolId,
       },
     });
     res.status(200).json(updatedFeeStructure);
@@ -309,6 +308,15 @@ export const updateFeeStructure = async (
 
 export const deleteFeeStructure = async (req: Request<{id : string}, {}, unknown>, res: Response) => {
     try {
+        const user = req.user;
+        if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+        const { role, schoolId: userSchoolId } = user;
+
+        if (role !== 'SCHOOL_ADMIN') {
+            return res.status(403).json({ message: "Access denied. Only School Admins can delete fee structures." });
+        }
+
         const feeStructureIdParsed = feeStructureIdSchema.safeParse(req.params.id);
 
         if (!feeStructureIdParsed.success) {
@@ -320,12 +328,13 @@ export const deleteFeeStructure = async (req: Request<{id : string}, {}, unknown
         const existingFeeStructure = await prisma.feeStructure.findFirst({
             where: {
                 id: feeStructureId,
+                schoolId: userSchoolId as string,
                 isDeleted: false,
             },
         });
 
         if (!existingFeeStructure) {
-            return res.status(404).json({ message: "Fee structure not found" });
+            return res.status(404).json({ message: "Fee structure not found in your school" });
         }
 
         await prisma.feeStructure.update({

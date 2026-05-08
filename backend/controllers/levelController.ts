@@ -18,6 +18,15 @@ const levelSchema = z.object({
 
 export const createLevel = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can create levels." });
+    }
+
     const parsed = levelSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({
@@ -25,47 +34,36 @@ export const createLevel = async (req: Request, res: Response) => {
         errors: parsed.error.flatten().fieldErrors,
       });
     }
-    const { name, schoolId, order } = parsed.data;
+    const { name, order } = parsed.data;
 
     const existingLevel = await prisma.level.findFirst({
       where: {
         name,
-        schoolId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
     if (existingLevel) {
-      return res.status(400).json({ message: "Level already exists" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
+      return res.status(400).json({ message: "Level already exists in your school" });
     }
 
     const existingOrder = await prisma.level.findFirst({
       where: {
         order,
-        schoolId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (existingOrder) {
-      return res.status(400).json({ message: "Level order already exists" });
+      return res.status(400).json({ message: "Level order already exists in your school" });
     }
 
     const newLevel = await prisma.level.create({
       data: {
         name,
         order,
-        schoolId,
+        schoolId: userSchoolId as string,
       },
     });
     res.status(201).json({ message: "Level created successfully", newLevel });
@@ -78,9 +76,15 @@ export const createLevel = async (req: Request, res: Response) => {
 
 export const getLevels = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const levels = await prisma.level.findMany({
       where: {
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
     res.status(200).json({ levels });
@@ -104,10 +108,16 @@ export const getLevel = async (
 
     const levelId = levelIdParsed.data;
 
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const level = await prisma.level.findFirst({
       where: {
         id: levelId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
@@ -128,28 +138,25 @@ export const getSchoolLevel = async (
   res: Response,
 ) => {
   try {
-    const schoolIdParsed = schoolIdSchema.safeParse(req.params.id);
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
 
+    const { schoolId: userSchoolId, role } = user;
+
+    const schoolIdParsed = schoolIdSchema.safeParse(req.params.id);
     if (!schoolIdParsed.success) {
       return res.status(400).json({ message: "Invalid school ID" });
     }
 
-    const schoolId = schoolIdParsed.data;
+    const targetSchoolId = role === 'SUPER_ADMIN' ? schoolIdParsed.data : userSchoolId;
 
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
+    if (!targetSchoolId) {
+       return res.status(400).json({ message: "School ID is required" });
     }
 
     const levels = await prisma.level.findMany({
       where: {
-        schoolId,
+        schoolId: targetSchoolId as string,
         isDeleted: false,
       },
     });
@@ -167,6 +174,15 @@ export const updateLevel = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can update levels." });
+    }
+
     const levelIdParsed = levelIdSchema.safeParse(req.params.id);
     const parsed = levelSchema.safeParse(req.body);
 
@@ -182,41 +198,31 @@ export const updateLevel = async (
     }
 
     const levelId = levelIdParsed.data;
-    const { name, schoolId, order } = parsed.data;
+    const { name, order } = parsed.data;
 
     const existingLevel = await prisma.level.findFirst({
       where: {
         id: levelId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingLevel) {
-      return res.status(404).json({ message: "Level not found" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
+      return res.status(404).json({ message: "Level not found in your school" });
     }
 
     const existingOrder = await prisma.level.findFirst({
       where: {
         order,
-        schoolId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
         NOT: { id: levelId },
       },
     });
 
     if (existingOrder) {
-      return res.status(400).json({ message: "Level order already exists" });
+      return res.status(400).json({ message: "Level order already exists in your school" });
     }
 
     const updatedLevel = await prisma.level.update({
@@ -226,7 +232,6 @@ export const updateLevel = async (
       data: {
         name,
         order,
-        schoolId,
       },
     });
 
@@ -244,6 +249,15 @@ export const deleteLevel = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can delete levels." });
+    }
+
     const levelIdParsed = levelIdSchema.safeParse(req.params.id);
 
     if (!levelIdParsed.success) {
@@ -255,12 +269,13 @@ export const deleteLevel = async (
     const existingLevel = await prisma.level.findFirst({
       where: {
         id: levelId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingLevel) {
-      return res.status(404).json({ message: "Level not found" });
+      return res.status(404).json({ message: "Level not found in your school" });
     }
 
     await prisma.level.update({

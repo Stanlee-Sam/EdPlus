@@ -19,10 +19,8 @@ const homeworkSchema = z.object({
   description: z.string(),
   dueDate: z.coerce.date(),
   classId: z.string().uuid(),
-  teacherId: z.string().uuid(),
   subjectId: z.string().uuid(),
   termId: z.string().uuid(),
-  schoolId: z.string().uuid(),
 });
 const parentHomeworkSchema = z.object({
   status: z.literal(HomeworkStatus.complete),
@@ -32,9 +30,15 @@ const parentHomeworkSchema = z.object({
 
 export const getHomework = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const homework = await prisma.homework.findMany({
       where: {
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
     res.status(200).json(homework);
@@ -44,11 +48,21 @@ export const getHomework = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const createHomework = async (
   req: Request<{}, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId, userId } = user;
+
+    if (role !== 'SCHOOL_ADMIN' && role !== 'TEACHER') {
+      return res.status(403).json({ message: "Access denied. Only School Admins and Teachers can create homework." });
+    }
+
     const parsed = homeworkSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -63,11 +77,15 @@ export const createHomework = async (
       description,
       dueDate,
       classId,
-      teacherId,
       subjectId,
       termId,
-      schoolId,
     } = parsed.data;
+
+    // Verify class belongs to the school
+    const existingClass = await prisma.class.findFirst({
+        where: { id: classId, schoolId: userSchoolId as string, isDeleted: false }
+    });
+    if (!existingClass) return res.status(404).json({ message: "Class does not exist in your school" });
 
     const newHomework = await prisma.homework.create({
       data: {
@@ -75,10 +93,10 @@ export const createHomework = async (
         description,
         dueDate,
         classId,
-        teacherId,
+        teacherId: userId,
         subjectId,
         termId,
-        schoolId,
+        schoolId: userSchoolId as string,
       },
     });
 
@@ -86,6 +104,7 @@ export const createHomework = async (
         {
             where : {
                 classId,
+                schoolId: userSchoolId as string,
                 isDeleted : false
             }
         }
@@ -108,11 +127,21 @@ export const createHomework = async (
     res.status(500).json({ message });
   }
 };
+
 export const editHomework = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId, userId } = user;
+
+    if (role !== 'SCHOOL_ADMIN' && role !== 'TEACHER') {
+      return res.status(403).json({ message: "Access denied. Only School Admins and Teachers can edit homework." });
+    }
+
     const homeworkIdParsed = homeworkIdSchema.safeParse(req.params.id);
     const parsed = homeworkSchema.safeParse(req.body);
 
@@ -132,21 +161,25 @@ export const editHomework = async (
       description,
       dueDate,
       classId,
-      teacherId,
       subjectId,
       termId,
-      schoolId,
     } = parsed.data;
 
     const existingHomework = await prisma.homework.findFirst({
       where: {
         id: homeworkId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingHomework) {
-      return res.status(404).json({ message: "Homework does not exist" });
+      return res.status(404).json({ message: "Homework does not exist in your school" });
+    }
+
+    // If teacher, ensure they are the one who created it
+    if (role === 'TEACHER' && existingHomework.teacherId !== userId) {
+        return res.status(403).json({ message: "Access denied. You can only edit homework you created." });
     }
 
     const updatedHomework = await prisma.homework.update({
@@ -158,10 +191,8 @@ export const editHomework = async (
         description,
         dueDate,
         classId,
-        teacherId,
         subjectId,
         termId,
-        schoolId,
       },
     });
 
@@ -180,6 +211,11 @@ export const ParentEditHomework = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId: userSchoolId } = user;
+
     const parsed = parentHomeworkSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -194,12 +230,13 @@ export const ParentEditHomework = async (
     const existingStudent = await prisma.student.findFirst({
       where: {
         id: studentId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingStudent) {
-      return res.status(404).json({ message: "Student does not exist" });
+      return res.status(404).json({ message: "Student does not exist in your school" });
     }
 
     const existingHomeworkSubmission =
@@ -237,11 +274,21 @@ export const ParentEditHomework = async (
     res.status(500).json({ message });
   }
 };
+
 export const deleteHomework = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId, userId } = user;
+
+    if (role !== 'SCHOOL_ADMIN' && role !== 'TEACHER') {
+      return res.status(403).json({ message: "Access denied. Only School Admins and Teachers can delete homework." });
+    }
+
     const homeworkIdParsed = homeworkIdSchema.safeParse(req.params.id);
 
     if (!homeworkIdParsed.success) {
@@ -253,12 +300,18 @@ export const deleteHomework = async (
     const existingHomework = await prisma.homework.findFirst({
       where: {
         id: homeworkId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingHomework) {
-      return res.status(404).json({ message: "Homework does not exist" });
+      return res.status(404).json({ message: "Homework does not exist in your school" });
+    }
+
+    // If teacher, ensure they are the one who created it
+    if (role === 'TEACHER' && existingHomework.teacherId !== userId) {
+        return res.status(403).json({ message: "Access denied. You can only delete homework you created." });
     }
 
     await prisma.homework.update({

@@ -29,6 +29,15 @@ export const createAttendance = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId, userId } = user;
+
+    if (role !== 'SCHOOL_ADMIN' && role !== 'TEACHER') {
+      return res.status(403).json({ message: "Access denied. Only School Admins and Teachers can record attendance." });
+    }
+
     const parsed = attendanceSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -38,7 +47,7 @@ export const createAttendance = async (
       });
     }
 
-    const { studentId, date, status, recordedBy, termId, schoolId } =
+    const { studentId, date, status, termId } =
       parsed.data;
 
     const existingAttendance = await prisma.attendance.findFirst({
@@ -46,12 +55,13 @@ export const createAttendance = async (
         studentId,
         date,
         termId,
+        schoolId: userSchoolId as string,
       },
     });
 
     if (existingAttendance) {
       return res.status(409).json({
-        message: "Attendance already exists",
+        message: "Attendance already exists for this student on this date",
       });
     }
 
@@ -60,9 +70,9 @@ export const createAttendance = async (
         studentId,
         date,
         status,
-        recordedBy,
+        recordedBy: userId,
         termId,
-        schoolId,
+        schoolId: userSchoolId as string,
       },
       select: {
         id: true,
@@ -98,6 +108,15 @@ export const updateAttendance = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN' && role !== 'TEACHER') {
+      return res.status(403).json({ message: "Access denied. Only School Admins and Teachers can update attendance." });
+    }
+
     const attendanceIdParsed = attendanceIdSchema.safeParse(req.params.id);
     const parsed = attendanceSchema.safeParse(req.body);
 
@@ -113,18 +132,19 @@ export const updateAttendance = async (
     }
 
     const attendanceId = attendanceIdParsed.data;
-    const { studentId, date, status, recordedBy, termId, schoolId } =
+    const { studentId, date, status, termId } =
       parsed.data;
 
     const existingAttendance = await prisma.attendance.findFirst({
       where: {
         id: attendanceId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingAttendance) {
-      return res.status(404).json({ message: "Attendance does not exist" });
+      return res.status(404).json({ message: "Attendance record not found in your school" });
     }
 
     const updatedAttendance = await prisma.attendance.update({
@@ -135,9 +155,7 @@ export const updateAttendance = async (
         studentId,
         date,
         status,
-        recordedBy,
         termId,
-        schoolId,
       },
       select: {
         id: true,
@@ -173,6 +191,15 @@ export const deleteAttendance = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can delete attendance records." });
+    }
+
     const attendanceIdParsed = attendanceIdSchema.safeParse(req.params.id);
 
     if (!attendanceIdParsed.success) {
@@ -184,12 +211,13 @@ export const deleteAttendance = async (
     const existingAttendance = await prisma.attendance.findFirst({
       where: {
         id: attendanceId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingAttendance) {
-      return res.status(404).json({ message: "Attendance does not exist" });
+      return res.status(404).json({ message: "Attendance record not found in your school" });
     }
 
     await prisma.attendance.update({
@@ -212,9 +240,15 @@ export const deleteAttendance = async (
 
 export const getAttendance = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const attendanceRecords = await prisma.attendance.findMany({
       where: {
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
       select: {
         id: true,
@@ -250,6 +284,11 @@ export const getAttendancePerStudent = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const studentIdParsed = studentIdSchema.safeParse(req.params.id);
 
     if (!studentIdParsed.success) {
@@ -262,17 +301,19 @@ export const getAttendancePerStudent = async (
       where: {
         id: studentId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!student) {
-      return res.status(404).json({ message: "Student does not exist" });
+      return res.status(404).json({ message: "Student does not exist in your school" });
     }
 
     const studentAttendanceRecord = await prisma.attendance.findMany({
       where: {
         studentId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
       select: {
         id: true,

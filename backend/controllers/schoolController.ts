@@ -18,8 +18,19 @@ const schoolIdSchema = z.string().uuid();
 
 export const getSchools = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    // If not SUPER_ADMIN, they can only see their own school
+    const whereClause: any = { isDeleted: false };
+    if (role !== 'SUPER_ADMIN') {
+        whereClause.id = userSchoolId as string;
+    }
+
     const schools = await prisma.school.findMany({
-      where : {isDeleted : false},
+      where : whereClause,
       include: {
         principal: {
           select: {
@@ -41,6 +52,13 @@ export const createSchool = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    if (user.role !== 'SUPER_ADMIN') {
+        return res.status(403).json({ message: "Access denied. Only Super Admins can create schools." });
+    }
+
     const parsed = schoolSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -83,7 +101,10 @@ export const updateSchool = async (
   res: Response,
 ) => {
   try {
-    const parsed = schoolSchema.safeParse(req.body);
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
     const schoolIdParsed = schoolIdSchema.safeParse(req.params.id);
 
     if (!schoolIdParsed.success) {
@@ -92,6 +113,14 @@ export const updateSchool = async (
       });
     }
 
+    const targetSchoolId = schoolIdParsed.data;
+
+    // Only SUPER_ADMIN can update any school. SCHOOL_ADMIN can only update their own.
+    if (role !== 'SUPER_ADMIN' && targetSchoolId !== userSchoolId) {
+        return res.status(403).json({ message: "Access denied. You can only update your own school." });
+    }
+
+    const parsed = schoolSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({
         message: "Validation failed",
@@ -99,11 +128,10 @@ export const updateSchool = async (
       });
     }
 
-    const schoolId = schoolIdParsed.data;
     const { name, location, contactEmail, contactPhone, principalId } = parsed.data;
 
     const existingSchool = await prisma.school.findFirst({
-      where: { id: schoolId, isDeleted : false },
+      where: { id: targetSchoolId, isDeleted : false },
     });
 
     if (!existingSchool) {
@@ -111,7 +139,7 @@ export const updateSchool = async (
     }
 
     const updatedSchool = await prisma.school.update({
-      where: { id: schoolId },
+      where: { id: targetSchoolId },
       data: {
         name,
         location,
@@ -144,16 +172,23 @@ export const deleteSchool = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    if (user.role !== 'SUPER_ADMIN') {
+        return res.status(403).json({ message: "Access denied. Only Super Admins can delete schools." });
+    }
+
     const schoolIdParsed = schoolIdSchema.safeParse(req.params.id);
 
     if (!schoolIdParsed.success) {
       return res.status(400).json({ message: "Invalid ID" });
     }
 
-    const schoolId = schoolIdParsed.data;
+    const targetSchoolId = schoolIdParsed.data;
 
     const existingSchool = await prisma.school.findFirst({
-      where: { id: schoolId, isDeleted : false },
+      where: { id: targetSchoolId, isDeleted : false },
     });
 
     if (!existingSchool) {
@@ -161,7 +196,7 @@ export const deleteSchool = async (
     }
 
     await prisma.school.update({
-      where: { id: schoolId },
+      where: { id: targetSchoolId },
       data : {
         isDeleted : true,
         deletedAt : new Date()

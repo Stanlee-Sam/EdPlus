@@ -39,6 +39,15 @@ export const createResult = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN' && role !== 'TEACHER') {
+      return res.status(403).json({ message: "Access denied. Only School Admins and Teachers can record results." });
+    }
+
     const parsed = resultSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -54,7 +63,6 @@ export const createResult = async (
       subjectId,
       studentId,
       termId,
-      schoolId,
       teacherClassSubjectId,
     } = parsed.data;
 
@@ -63,63 +71,54 @@ export const createResult = async (
         studentId,
         termId,
         teacherClassSubjectId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (existingResult) {
       return res.status(409).json({
-        message: "Result already exists",
+        message: "Result already exists for this student in this term and subject",
       });
     }
 
     const existingStudent = await prisma.student.findFirst({
-      where: { id: studentId, isDeleted: false },
+      where: { id: studentId, schoolId: userSchoolId as string, isDeleted: false },
     });
 
     if (!existingStudent) {
       return res.status(404).json({
-        message: "Student does not exist",
+        message: "Student does not exist in your school",
       });
     }
 
     const existingTerm = await prisma.term.findFirst({
-      where: { id: termId, isDeleted: false },
+      where: { id: termId, schoolId: userSchoolId as string, isDeleted: false },
     });
 
     if (!existingTerm) {
       return res.status(404).json({
-        message: "Term does not exist",
-      });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: { id: schoolId, isDeleted: false },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({
-        message: "School does not exist",
+        message: "Term does not exist in your school",
       });
     }
 
     const existingTCS = await prisma.teacherClassSubject.findFirst({
-      where: { id: teacherClassSubjectId, isDeleted: false },
+      where: { id: teacherClassSubjectId, schoolId: userSchoolId as string, isDeleted: false },
     });
 
     if (!existingTCS) {
       return res.status(404).json({
-        message: "TCS does not exist",
+        message: "TeacherClassSubject record does not exist in your school",
       });
     }
 
     const existingSubject = await prisma.subject.findFirst({
-      where: { id: subjectId, isDeleted: false },
+      where: { id: subjectId, schoolId: userSchoolId as string, isDeleted: false },
     });
 
     if (!existingSubject) {
       return res.status(404).json({
-        message: "Subject does not exist",
+        message: "Subject does not exist in your school",
       });
     }
 
@@ -130,7 +129,7 @@ export const createResult = async (
         subjectId,
         studentId,
         termId,
-        schoolId,
+        schoolId: userSchoolId as string,
         teacherClassSubjectId,
       },
     });
@@ -145,6 +144,11 @@ export const createResult = async (
 
 export const getResults = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId: userSchoolId, role } = user;
+
     const parsed = resultFilterSchema.safeParse(req.query);
 
     if (!parsed.success) {
@@ -158,17 +162,18 @@ export const getResults = async (req: Request, res: Response) => {
       subjectId,
       studentId,
       termId,
-      schoolId,
       teacherClassSubjectId,
       classId,
     } = parsed.data;
 
-    const where: any = { isDeleted: false };
+    const where: any = { 
+      isDeleted: false,
+      ...(role !== 'SUPER_ADMIN' ? { schoolId: userSchoolId as string } : {}),
+    };
 
     if (subjectId) where.subjectId = subjectId;
     if (studentId) where.studentId = studentId;
     if (termId) where.termId = termId;
-    if (schoolId) where.schoolId = schoolId;
     if (teacherClassSubjectId)
       where.teacherClassSubjectId = teacherClassSubjectId;
     if (classId) {
@@ -187,11 +192,16 @@ export const getResults = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const getResult = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const resultIdParsed = resultIdSchema.safeParse(req.params.id);
 
     if (!resultIdParsed.success) {
@@ -204,11 +214,12 @@ export const getResult = async (
       where: {
         id: resultId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!result) {
-      return res.status(404).json({ message: "Result not found" });
+      return res.status(404).json({ message: "Result not found in your school" });
     }
 
     res.status(200).json(result);
@@ -218,11 +229,16 @@ export const getResult = async (
     res.status(500).json({ message });
   }
 };
+
 export const getResultPerStudent = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const studentIdParsed = studentIdSchema.safeParse(req.params.id);
 
     if (!studentIdParsed.success) {
@@ -236,17 +252,19 @@ export const getResultPerStudent = async (
       where: {
         id: studentId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!existingStudent) {
-      return res.status(404).json({ message: "Student does not exist" });
+      return res.status(404).json({ message: "Student does not exist in your school" });
     }
 
     const studentResult = await prisma.result.findMany({
       where: {
         studentId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
@@ -263,6 +281,10 @@ export const getResultPerClass = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const classIdParsed = classIdSchema.safeParse(req.params.id);
 
     if (!classIdParsed.success) {
@@ -276,11 +298,12 @@ export const getResultPerClass = async (
       where: {
         id: classId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!existingClass) {
-      return res.status(404).json({ message: "Class does not exist" });
+      return res.status(404).json({ message: "Class does not exist in your school" });
     }
 
     const classResult = await prisma.result.findMany({
@@ -289,6 +312,7 @@ export const getResultPerClass = async (
         student: {
           classId: classId,
           isDeleted: false,
+          ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
         },
       },
     });
@@ -300,11 +324,16 @@ export const getResultPerClass = async (
     res.status(500).json({ message });
   }
 };
+
 export const getResultPerTerm = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const termIdParsed = termIdSchema.safeParse(req.params.id);
 
     if (!termIdParsed.success) {
@@ -318,17 +347,19 @@ export const getResultPerTerm = async (
       where: {
         id: termId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!existingTerm) {
-      return res.status(404).json({ message: "Term does not exist" });
+      return res.status(404).json({ message: "Term does not exist in your school" });
     }
 
     const termResult = await prisma.result.findMany({
       where: {
         termId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
@@ -345,6 +376,15 @@ export const updateResult = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN' && role !== 'TEACHER') {
+      return res.status(403).json({ message: "Access denied. Only School Admins and Teachers can update results." });
+    }
+
     const resultIdParsed = resultIdSchema.safeParse(req.params.id);
     const parsed = resultSchema.safeParse(req.body);
 
@@ -365,70 +405,30 @@ export const updateResult = async (
       subjectId,
       studentId,
       termId,
-      schoolId,
       teacherClassSubjectId,
     } = parsed.data;
 
     const existingResult = await prisma.result.findFirst({
       where: {
         id: resultId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingResult) {
       return res.status(404).json({
-        message: "Result does not exist",
+        message: "Result does not exist in your school",
       });
     }
 
     const existingStudent = await prisma.student.findFirst({
-      where: { id: studentId, isDeleted: false },
+      where: { id: studentId, schoolId: userSchoolId as string, isDeleted: false },
     });
 
     if (!existingStudent) {
       return res.status(404).json({
-        message: "Student does not exist",
-      });
-    }
-
-    const existingTerm = await prisma.term.findFirst({
-      where: { id: termId, isDeleted: false },
-    });
-
-    if (!existingTerm) {
-      return res.status(404).json({
-        message: "Term does not exist",
-      });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: { id: schoolId, isDeleted: false },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({
-        message: "School does not exist",
-      });
-    }
-
-    const existingTCS = await prisma.teacherClassSubject.findFirst({
-      where: { id: teacherClassSubjectId, isDeleted: false },
-    });
-
-    if (!existingTCS) {
-      return res.status(404).json({
-        message: "TCS does not exist",
-      });
-    }
-
-    const existingSubject = await prisma.subject.findFirst({
-      where: { id: subjectId, isDeleted: false },
-    });
-
-    if (!existingSubject) {
-      return res.status(404).json({
-        message: "Subject does not exist",
+        message: "Student does not exist in your school",
       });
     }
 
@@ -442,7 +442,6 @@ export const updateResult = async (
         subjectId,
         studentId,
         termId,
-        schoolId,
         teacherClassSubjectId,
       },
     });
@@ -460,6 +459,15 @@ export const deleteResult = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can delete results." });
+    }
+
     const resultIdParsed = resultIdSchema.safeParse(req.params.id);
 
     if (!resultIdParsed.success) {
@@ -471,13 +479,14 @@ export const deleteResult = async (
     const existingResult = await prisma.result.findFirst({
       where: {
         id: resultId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingResult) {
       return res.status(404).json({
-        message: "Result does not exist",
+        message: "Result does not exist in your school",
       });
     }
 

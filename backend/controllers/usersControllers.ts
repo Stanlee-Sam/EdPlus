@@ -13,6 +13,7 @@ const prisma = new PrismaClient({ adapter });
 type TokenUser = {
   id: string;
   role: Role;
+  schoolId?: string | null;
 };
 
 const jwtSecret = process.env.JWT_SECRET;
@@ -20,7 +21,7 @@ if (!jwtSecret) {
   throw new Error("JWT_SECRET is not defined");
 }
 const generateAccessToken = (user: TokenUser) => {
-  return jwt.sign({ userId: user.id, role: user.role }, jwtSecret, {
+  return jwt.sign({ userId: user.id, role: user.role, schoolId: user.schoolId }, jwtSecret, {
     expiresIn: "7d",
   });
 };
@@ -46,12 +47,24 @@ const updateRoleSchema = z.object({
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
-    const { schoolId, role } = req.query;
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId: userSchoolId, role: userRole } = user;
+
+    if (userRole !== 'SUPER_ADMIN' && userRole !== 'SCHOOL_ADMIN') {
+        return res.status(403).json({ message: "Access denied." });
+    }
+
+    const { schoolId: querySchoolId, role: queryRole } = req.query;
     
+    // If SCHOOL_ADMIN, they can only see users in their school
+    const effectiveSchoolId = userRole === 'SUPER_ADMIN' ? (querySchoolId as string) : (userSchoolId as string);
+
     const users = await prisma.user.findMany({
       where: {
-        ...(schoolId ? { schoolId: String(schoolId) } : {}),
-        ...(role ? { role: role as any } : {}),
+        ...(effectiveSchoolId ? { schoolId: effectiveSchoolId } : {}),
+        ...(queryRole ? { role: queryRole as any } : {}),
       },
       select: {
         id: true,
@@ -150,6 +163,15 @@ export const loginUser = async (
 
 export const updateUserRole = async (req: Request<{id: string}, {}, unknown>, res: Response) => {
   try {
+    const adminUser = req.user;
+    if (!adminUser) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role: adminRole, schoolId: adminSchoolId } = adminUser;
+
+    if (adminRole !== 'SUPER_ADMIN' && adminRole !== 'SCHOOL_ADMIN') {
+        return res.status(403).json({ message: "Access denied." });
+    }
+
     const parsed = updateRoleSchema.safeParse(req.body);
     const userIdParsed = userIdSchema.safeParse(req.params.id);
 
@@ -167,12 +189,20 @@ export const updateUserRole = async (req: Request<{id: string}, {}, unknown>, re
     }
     
     const {userId, role} = parsed.data;
-    const user = await prisma.user.findUnique({
+
+    // Check if target user exists
+    const targetUser = await prisma.user.findUnique({
       where : {id : userId}
     });
-    if(!user){
+    if(!targetUser){
       return res.status(404).json({message : "User not found"})
     }
+
+    // If SCHOOL_ADMIN, they can only update users in their school
+    if (adminRole === 'SCHOOL_ADMIN' && targetUser.schoolId !== adminSchoolId) {
+        return res.status(403).json({ message: "Access denied. You can only update users in your school." });
+    }
+
     const updatedUser = await prisma.user.update({
       where : {id : userId},
       data : {role}
@@ -182,6 +212,5 @@ export const updateUserRole = async (req: Request<{id: string}, {}, unknown>, re
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error updating user role:", message);
     res.status(500).json({ message });
-    
   }
 }

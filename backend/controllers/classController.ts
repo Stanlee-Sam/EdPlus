@@ -18,9 +18,15 @@ const classSchema = z.object({
 
 export const getClasses = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const classes = await prisma.class.findMany({
       where: {
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
     res.status(200).json({ classes });
@@ -36,6 +42,15 @@ export const createClass = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can create classes." });
+    }
+
     const parsed = classSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({
@@ -43,35 +58,28 @@ export const createClass = async (
         errors: parsed.error.flatten().fieldErrors,
       });
     }
-    const { name, classTeacherId, schoolId, levelId } = parsed.data;
+    const { name, classTeacherId, levelId } = parsed.data;
 
     const existingTeacher = await prisma.user.findFirst({
-      where: { id: classTeacherId },
+      where: { id: classTeacherId, schoolId: userSchoolId as string },
     });
     if (!existingTeacher) {
-      return res.status(404).json({ message: "Teacher does not exist" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: { id: schoolId, isDeleted: false },
-    });
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
+      return res.status(404).json({ message: "Teacher does not exist in your school" });
     }
 
     const existingLevel = await prisma.level.findFirst({
-      where: { id: levelId, schoolId },
+      where: { id: levelId, schoolId: userSchoolId as string },
     });
 
     if (!existingLevel) {
-      return res.status(404).json({ message: "Level does not exist" });
+      return res.status(404).json({ message: "Level does not exist in your school" });
     }
 
     const newClass = await prisma.class.create({
       data: {
         name,
         classTeacherId,
-        schoolId,
+        schoolId: userSchoolId as string,
         levelId,
       },
     });
@@ -88,6 +96,15 @@ export const updateClass = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can update classes." });
+    }
+
     const classIdParsed = classIdSchema.safeParse(req.params.id);
     const parsed = classSchema.safeParse(req.body);
 
@@ -103,36 +120,29 @@ export const updateClass = async (
     }
 
     const classId = classIdParsed.data;
-    const { name, classTeacherId, schoolId, levelId } = parsed.data;
+    const { name, classTeacherId, levelId } = parsed.data;
 
     const existingClass = await prisma.class.findFirst({
-      where: { id: classId, isDeleted: false },
+      where: { id: classId, schoolId: userSchoolId as string, isDeleted: false },
     });
 
     if (!existingClass) {
-      return res.status(404).json({ message: "Class does not exist" });
+      return res.status(404).json({ message: "Class does not exist in your school" });
     }
 
     const existingTeacher = await prisma.user.findFirst({
-      where: { id: classTeacherId },
+      where: { id: classTeacherId, schoolId: userSchoolId as string },
     });
     if (!existingTeacher) {
-      return res.status(404).json({ message: "Teacher does not exist" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: { id: schoolId, isDeleted: false },
-    });
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
+      return res.status(404).json({ message: "Teacher does not exist in your school" });
     }
 
     const existingLevel = await prisma.level.findFirst({
-      where: { id: levelId, schoolId },
+      where: { id: levelId, schoolId: userSchoolId as string },
     });
 
     if (!existingLevel) {
-      return res.status(404).json({ message: "Level does not exist" });
+      return res.status(404).json({ message: "Level does not exist in your school" });
     }
 
     const updatedClass = await prisma.class.update({
@@ -140,7 +150,6 @@ export const updateClass = async (
       data: {
         name,
         classTeacherId,
-        schoolId,
         levelId,
       },
     });
@@ -160,6 +169,15 @@ export const deleteClass = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can delete classes." });
+    }
+
     const classIdParsed = classIdSchema.safeParse(req.params.id);
     if (!classIdParsed.success) {
       return res.status(400).json({
@@ -170,11 +188,11 @@ export const deleteClass = async (
     const classId = classIdParsed.data;
 
     const existingClass = await prisma.class.findFirst({
-      where: { id: classId, isDeleted: false },
+      where: { id: classId, schoolId: userSchoolId as string, isDeleted: false },
     });
 
     if (!existingClass) {
-      return res.status(404).json({ message: "Class does not exist" });
+      return res.status(404).json({ message: "Class does not exist in your school" });
     }
 
     await prisma.class.update({

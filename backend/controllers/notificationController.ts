@@ -14,7 +14,6 @@ const notificationSchema = z.object({
   message: z.string(),
   isRead: z.boolean().optional(),
   userId: z.string().uuid(),
-  schoolId: z.string().uuid(),
 });
 const notificationUpdateSchema = notificationSchema.partial();
 
@@ -24,6 +23,15 @@ const notificationReaderSchema = z.object({
 
 export const createNotification = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId: userSchoolId, role } = user;
+
+    if (role !== 'SCHOOL_ADMIN' && role !== 'TEACHER' && role !== 'SUPER_ADMIN') {
+         return res.status(403).json({ message: "Access denied." });
+    }
+
     const parsed = notificationSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -33,30 +41,18 @@ export const createNotification = async (req: Request, res: Response) => {
       });
     }
 
-    const { message, isRead, userId, schoolId } = parsed.data;
+    const { message, isRead, userId } = parsed.data;
 
     const existingUser = await prisma.user.findFirst({
       where: {
         id: userId,
+        schoolId: userSchoolId as string,
       },
     });
 
     if (!existingUser) {
       return res.status(404).json({
-        message: "User does not exist",
-      });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({
-        message: "School does not exist",
+        message: "User does not exist in your school",
       });
     }
 
@@ -65,7 +61,7 @@ export const createNotification = async (req: Request, res: Response) => {
         message,
         isRead,
         userId,
-        schoolId,
+        schoolId: userSchoolId as string,
       },
     });
     res.status(201).json(newNotification);
@@ -75,11 +71,18 @@ export const createNotification = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const getNotifications = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const notifications = await prisma.notification.findMany({
       where: {
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
     res.status(200).json(notifications);
@@ -89,11 +92,16 @@ export const getNotifications = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const getNotification = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const notificationIdParsed = notificationIdSchema.safeParse(req.params.id);
 
     if (!notificationIdParsed.success) {
@@ -108,12 +116,13 @@ export const getNotification = async (
       where: {
         id: notificationId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!notification) {
       return res.status(404).json({
-        message: "Notification does not exist",
+        message: "Notification does not exist in your school",
       });
     }
 
@@ -124,11 +133,16 @@ export const getNotification = async (
     res.status(500).json({ message });
   }
 };
+
 export const getUserNotifications = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId: userSchoolId, role, userId: currentUserId } = user;
     const userIdParsed = userIdSchema.safeParse(req.params.id);
 
     if (!userIdParsed.success) {
@@ -137,24 +151,31 @@ export const getUserNotifications = async (
       });
     }
 
-    const userId = userIdParsed.data;
+    const targetUserId = userIdParsed.data;
+
+    // Only the user themselves or SCHOOL_ADMIN/SUPER_ADMIN can see notifications
+    if (role !== 'SUPER_ADMIN' && role !== 'SCHOOL_ADMIN' && targetUserId !== currentUserId) {
+         return res.status(403).json({ message: "Access denied." });
+    }
 
     const existingUser = await prisma.user.findFirst({
       where: {
-        id: userId,
+        id: targetUserId,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: userSchoolId as string } : {}),
       },
     });
 
     if (!existingUser) {
       return res.status(404).json({
-        message: "User does not exist",
+        message: "User does not exist in your context",
       });
     }
 
     const userNotifications = await prisma.notification.findMany({
       where: {
-        userId,
+        userId: targetUserId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: userSchoolId as string } : {}),
       },
     });
 
@@ -165,11 +186,16 @@ export const getUserNotifications = async (
     res.status(500).json({ message });
   }
 };
+
 export const updateNotification = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId: userSchoolId, role, userId: currentUserId } = user;
     const notificationIdParsed = notificationIdSchema.safeParse(req.params.id);
     const parsed = notificationUpdateSchema.safeParse(req.body);
 
@@ -191,17 +217,21 @@ export const updateNotification = async (
     const existingNotification = await prisma.notification.findFirst({
       where: {
         id: notificationId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingNotification) {
       return res.status(404).json({
-        message: "Notification does not exist",
+        message: "Notification does not exist in your school",
       });
     }
 
-  
+    // Only the recipient or SCHOOL_ADMIN can update
+    if (role !== 'SCHOOL_ADMIN' && existingNotification.userId !== currentUserId) {
+        return res.status(403).json({ message: "Access denied." });
+    }
 
     const updatedNotification = await prisma.notification.update({
       where: {
@@ -220,6 +250,10 @@ export const updateNotification = async (
 
 export const markNotificationAsRead = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { userId: currentUserId } = user;
     const notificationIdParsed = notificationIdSchema.safeParse(req.params.id);
     const parsed = notificationReaderSchema.safeParse(req.body);
 
@@ -242,13 +276,14 @@ export const markNotificationAsRead = async (req: Request, res: Response) => {
     const existingNotification = await prisma.notification.findFirst({
       where: {
         id: notificationId,
+        userId: currentUserId,
         isDeleted: false,
       },
     });
 
     if (!existingNotification) {
       return res.status(404).json({
-        message: "Notification does not exist",
+        message: "Notification not found for you",
       });
     }
 
@@ -268,11 +303,16 @@ export const markNotificationAsRead = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const deleteNotification = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId: userSchoolId, role, userId: currentUserId } = user;
     const notificationIdParsed = notificationIdSchema.safeParse(req.params.id);
 
     if (!notificationIdParsed.success) {
@@ -286,14 +326,20 @@ export const deleteNotification = async (
     const existingNotification = await prisma.notification.findFirst({
       where: {
         id: notificationId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingNotification) {
       return res.status(404).json({
-        message: "Notification does not exist",
+        message: "Notification does not exist in your school",
       });
+    }
+
+    // Only the recipient or SCHOOL_ADMIN can delete
+    if (role !== 'SCHOOL_ADMIN' && existingNotification.userId !== currentUserId) {
+        return res.status(403).json({ message: "Access denied." });
     }
 
     await prisma.notification.update({

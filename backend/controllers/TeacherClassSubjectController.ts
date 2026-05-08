@@ -11,14 +11,19 @@ const teacherClassSubjectSchema = z.object({
   teacherId: z.string().uuid(),
   classId: z.string().uuid(),
   subjectId: z.string().uuid(),
-  schoolId: z.string().uuid(),
 });
 
 export const getTCS = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const TCSs = await prisma.teacherClassSubject.findMany({
       where: {
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
     res.status(200).json(TCSs);
@@ -28,11 +33,16 @@ export const getTCS = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const getSpecificTCS = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const TCSIdParsed = teacherClassSubjectIdSchema.safeParse(req.params.id);
 
     if (!TCSIdParsed.success) {
@@ -45,11 +55,12 @@ export const getSpecificTCS = async (
       where: {
         id: TCSId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!TCS) {
-      return res.status(404).json({ message: "TCS does not exist" });
+      return res.status(404).json({ message: "TCS does not exist in your school" });
     }
 
     res.status(200).json(TCS);
@@ -59,8 +70,18 @@ export const getSpecificTCS = async (
     res.status(500).json({ message });
   }
 };
+
 export const createTCS = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can manage TCS records." });
+    }
+
     const parsed = teacherClassSubjectSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -70,71 +91,62 @@ export const createTCS = async (req: Request, res: Response) => {
       });
     }
 
-    const { teacherId, classId, subjectId, schoolId } = parsed.data;
+    const { teacherId, classId, subjectId } = parsed.data;
 
     const existingTCS = await prisma.teacherClassSubject.findFirst({
       where: {
         teacherId,
         classId,
         subjectId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (existingTCS) {
       return res.status(409).json({
-        message: "TCS already exists",
-      });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({
-        message: "School does not exist",
+        message: "This assignment already exists in your school",
       });
     }
 
     const existingClass = await prisma.class.findFirst({
       where: {
         id: classId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingClass) {
       return res.status(404).json({
-        message: "Class does not exist",
+        message: "Class does not exist in your school",
       });
     }
 
     const existingSubject = await prisma.subject.findFirst({
       where: {
         id: subjectId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingSubject) {
       return res.status(404).json({
-        message: "Subject does not exist",
+        message: "Subject does not exist in your school",
       });
     }
 
     const existingTeacher = await prisma.user.findFirst({
       where: {
         id: teacherId,
+        schoolId: userSchoolId as string,
       },
     });
 
     if (!existingTeacher) {
       return res.status(404).json({
-        message: "Teacher does not exist",
+        message: "Teacher does not exist in your school",
       });
     }
 
@@ -143,7 +155,7 @@ export const createTCS = async (req: Request, res: Response) => {
         teacherId,
         classId,
         subjectId,
-        schoolId,
+        schoolId: userSchoolId as string,
       },
     });
 
@@ -154,11 +166,21 @@ export const createTCS = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const updateTCS = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can update TCS records." });
+    }
+
     const TCSIdParsed = teacherClassSubjectIdSchema.safeParse(req.params.id);
     const parsed = teacherClassSubjectSchema.safeParse(req.body);
 
@@ -173,69 +195,19 @@ export const updateTCS = async (
       });
     }
 
-    const { teacherId, classId, subjectId, schoolId } = parsed.data;
+    const { teacherId, classId, subjectId } = parsed.data;
     const TCSId = TCSIdParsed.data;
 
     const existingTCS = await prisma.teacherClassSubject.findFirst({
       where: {
         id: TCSId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingTCS) {
-      return res.status(404).json({ message: "TCS does not exist" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({
-        message: "School does not exist",
-      });
-    }
-
-    const existingClass = await prisma.class.findFirst({
-      where: {
-        id: classId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingClass) {
-      return res.status(404).json({
-        message: "Class does not exist",
-      });
-    }
-
-    const existingSubject = await prisma.subject.findFirst({
-      where: {
-        id: subjectId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSubject) {
-      return res.status(404).json({
-        message: "Subject does not exist",
-      });
-    }
-
-    const existingTeacher = await prisma.user.findFirst({
-      where: {
-        id: teacherId,
-      },
-    });
-
-    if (!existingTeacher) {
-      return res.status(404).json({
-        message: "Teacher does not exist",
-      });
+      return res.status(404).json({ message: "TCS record not found in your school" });
     }
 
     const updatedTCS = await prisma.teacherClassSubject.update({
@@ -246,7 +218,6 @@ export const updateTCS = async (
         teacherId,
         classId,
         subjectId,
-        schoolId,
       },
     });
 
@@ -257,11 +228,21 @@ export const updateTCS = async (
     res.status(500).json({ message });
   }
 };
+
 export const deleteTCS = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can delete TCS records." });
+    }
+
     const TCSIdParsed = teacherClassSubjectIdSchema.safeParse(req.params.id);
 
     if (!TCSIdParsed.success) {
@@ -273,12 +254,13 @@ export const deleteTCS = async (
     const existingTCS = await prisma.teacherClassSubject.findFirst({
       where: {
         id: TCSId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingTCS) {
-      return res.status(404).json({ message: "TCS does not exist" });
+      return res.status(404).json({ message: "TCS record not found in your school" });
     }
 
     await prisma.teacherClassSubject.update({

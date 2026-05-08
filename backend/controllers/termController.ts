@@ -13,42 +13,39 @@ const termSchema = z.object({
   name: z.string(),
   startDate: z.coerce.date(),
   endDate: z.coerce.date(),
-  schoolId: z.string().uuid(),
 });
 
 export const createTerm = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can create terms." });
+    }
+
     const parsed = termSchema.safeParse(req.body);
 
     if (!parsed.success) {
-      return res.status(400).json({ message: "Invalid request body" });
+      return res.status(400).json({ message: "Invalid request body", errors: parsed.error.flatten().fieldErrors });
     }
 
-    const { name, startDate, endDate, schoolId } = parsed.data;
+    const { name, startDate, endDate } = parsed.data;
 
     const existingTerm = await prisma.term.findFirst({
       where: {
         name,
         startDate,
         endDate,
-        schoolId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (existingTerm) {
-      return res.status(400).json({ message: "Term already exists" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
+      return res.status(400).json({ message: "Term already exists in your school" });
     }
 
     const newTerm = await prisma.term.create({
@@ -56,7 +53,7 @@ export const createTerm = async (req: Request, res: Response) => {
         name,
         startDate,
         endDate,
-        schoolId,
+        schoolId: userSchoolId as string,
       },
     });
 
@@ -67,9 +64,20 @@ export const createTerm = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const getTerms = async (req: Request, res: Response) => {
   try {
-    const terms = await prisma.term.findMany({ where: { isDeleted: false } });
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
+    const terms = await prisma.term.findMany({ 
+        where: { 
+            isDeleted: false,
+            ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
+        } 
+    });
     res.status(200).json(terms);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Uknown Error";
@@ -77,11 +85,16 @@ export const getTerms = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const getSpecificTerm = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const termIdParsed = termIdSchema.safeParse(req.params.id);
 
     if (!termIdParsed.success) {
@@ -93,12 +106,16 @@ export const getSpecificTerm = async (
     const termId = termIdParsed.data;
 
     const Term = await prisma.term.findFirst({
-      where: { id: termId, isDeleted: false },
+      where: { 
+          id: termId, 
+          isDeleted: false,
+          ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
+      },
     });
 
     if (!Term) {
       return res.status(404).json({
-        message: "Term does not exist",
+        message: "Term does not exist in your school",
       });
     }
 
@@ -109,11 +126,21 @@ export const getSpecificTerm = async (
     res.status(500).json({ message });
   }
 };
+
 export const updateTerm = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can update terms." });
+    }
+
     const termIdParsed = termIdSchema.safeParse(req.params.id);
     const parsed = termSchema.safeParse(req.body);
 
@@ -126,34 +153,23 @@ export const updateTerm = async (
     if (!parsed.success) {
       return res.status(400).json({
         message: "Invalid request body",
+        errors: parsed.error.flatten().fieldErrors,
       });
     }
-    const { name, startDate, endDate, schoolId } = parsed.data;
+    const { name, startDate, endDate } = parsed.data;
     const termId = termIdParsed.data;
 
     const existingTerm = await prisma.term.findFirst({
       where: {
         id: termId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingTerm) {
       return res.status(404).json({
-        message: "Term does not exist",
-      });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({
-        message: "School does not exist",
+        message: "Term does not exist in your school",
       });
     }
 
@@ -165,7 +181,6 @@ export const updateTerm = async (
         name,
         startDate,
         endDate,
-        schoolId,
       },
     });
 
@@ -176,11 +191,21 @@ export const updateTerm = async (
     res.status(500).json({ message });
   }
 };
+
 export const deleteTerm = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can delete terms." });
+    }
+
     const termIdParsed = termIdSchema.safeParse(req.params.id);
 
     if (!termIdParsed.success) {
@@ -194,13 +219,14 @@ export const deleteTerm = async (
     const existingTerm = await prisma.term.findFirst({
       where: {
         id: termId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingTerm) {
       return res.status(404).json({
-        message: "Term does not exist",
+        message: "Term does not exist in your school",
       });
     }
 

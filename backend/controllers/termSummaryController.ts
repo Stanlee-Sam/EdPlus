@@ -5,8 +5,7 @@ import * as prismaPkg from "../generated/prisma/client.js";
 
 const PrismaClient = (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
 const Grade = (prismaPkg as any).Grade ?? (prismaPkg as any).default?.Grade;
-const Prisma =
-  (prismaPkg as any).Prisma ?? (prismaPkg as any).default?.Prisma;
+
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const prisma = new PrismaClient({ adapter });
@@ -17,20 +16,22 @@ const studentIdSchema = z.string().uuid();
 const termSummarySchema = z.object({
   termId: z.string().uuid(),
   studentId: z.string().uuid(),
-  schoolId: z.string().uuid(),
   totalScore: z.number().int(),
   meanScore: z.number(),
   meanGrade: z.nativeEnum(Grade),
 });
 
-const termSummaryFilterSchema = z.object({
-  termId: z.string().uuid().optional(),
-  studentId: z.string().uuid().optional(),
-  schoolId: z.string().uuid().optional(),
-});
-
 export const createTermSummary = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN' && role !== 'TEACHER') {
+      return res.status(403).json({ message: "Access denied. Only School Admins and Teachers can create term summaries." });
+    }
+
     const termSummaryParsed = termSummarySchema.safeParse(req.body);
 
     if (!termSummaryParsed.success) {
@@ -40,59 +41,49 @@ export const createTermSummary = async (req: Request, res: Response) => {
       });
     }
 
-    const { termId, studentId, schoolId, totalScore, meanScore, meanGrade } =
+    const { termId, studentId, totalScore, meanScore, meanGrade } =
       termSummaryParsed.data;
 
     const existingTermSummary = await prisma.termSummary.findFirst({
       where: {
         termId,
         studentId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (existingTermSummary) {
       return res.status(409).json({
-        message: "Term summary already exists",
+        message: "Term summary already exists for this student and term in your school",
       });
     }
 
     const existingStudent = await prisma.student.findFirst({
       where: {
         id: studentId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingStudent) {
       return res.status(404).json({
-        message: "Student does not exist",
+        message: "Student does not exist in your school",
       });
     }
 
     const existingTerm = await prisma.term.findFirst({
       where: {
         id: termId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingTerm) {
       return res.status(404).json({
-        message: "Term does not exist",
-      });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({
-        message: "School does not exist",
+        message: "Term does not exist in your school",
       });
     }
 
@@ -100,7 +91,7 @@ export const createTermSummary = async (req: Request, res: Response) => {
       data: {
         termId,
         studentId,
-        schoolId,
+        schoolId: userSchoolId as string,
         totalScore,
         meanScore,
         meanGrade,
@@ -117,24 +108,19 @@ export const createTermSummary = async (req: Request, res: Response) => {
 
 export const getTermSummaries = async (req: Request, res: Response) => {
   try {
-    const parsed = termSummaryFilterSchema.safeParse(req.query);
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
 
-    if (!parsed.success) {
-      return res.status(400).json({
-        message: "Validation failed",
-        errors: parsed.error.flatten().fieldErrors,
-      });
-    }
+    const { schoolId, role } = user;
+    const { termId, studentId, schoolId: querySchoolId } = req.query;
 
-    const { termId, studentId, schoolId } = parsed.data;
+    const where: any = { 
+        isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : (querySchoolId ? { schoolId: String(querySchoolId) } : {})),
+    };
 
-    const where: any = { isDeleted: false };
-
-    if (termId) where.termId = termId;
-
-    if (studentId) where.studentId = studentId;
-
-    if (schoolId) where.schoolId = schoolId;
+    if (termId) where.termId = String(termId);
+    if (studentId) where.studentId = String(studentId);
 
     const termSummaries = await prisma.termSummary.findMany({ where });
 
@@ -151,6 +137,10 @@ export const getSpecificTermSummary = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const termSummaryIdParsed = termSummaryIdSchema.safeParse(req.params.id);
 
     if (!termSummaryIdParsed.success) {
@@ -165,12 +155,13 @@ export const getSpecificTermSummary = async (
       where: {
         id: termSummaryId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!TermSummary) {
       return res.status(404).json({
-        message: "Term summary does not exist",
+        message: "Term summary not found in your school",
       });
     }
 
@@ -187,6 +178,10 @@ export const getTermSummaryByTermId = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const termIdParsed = termIdSchema.safeParse(req.params.id);
 
     if (!termIdParsed.success) {
@@ -197,38 +192,31 @@ export const getTermSummaryByTermId = async (
 
     const termId = termIdParsed.data;
 
-    const existingTerm = await prisma.term.findFirst({
-      where: {
-        id: termId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingTerm) {
-      return res.status(404).json({
-        message: "Term does not exist",
-      });
-    }
-
     const termSummary = await prisma.termSummary.findMany({
       where: {
         termId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     res.status(200).json(termSummary);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Uknown Error";
-    console.error("Error fetching specific term summary", message);
+    console.error("Error fetching term summary by term", message);
     res.status(500).json({ message });
   }
 };
+
 export const getTermSummaryByStudentId = async (
   req: Request,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const studentIdParsed = studentIdSchema.safeParse(req.params.id);
 
     if (!studentIdParsed.success) {
@@ -239,38 +227,36 @@ export const getTermSummaryByStudentId = async (
 
     const studentId = studentIdParsed.data;
 
-    const student = await prisma.student.findFirst({
-      where: {
-        id: studentId,
-        isDeleted: false,
-      },
-    });
-
-    if (!student) {
-      return res.status(404).json({
-        message: "Student does not exist",
-      });
-    }
-
     const studentTermSummary = await prisma.termSummary.findMany({
       where: {
         studentId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     res.status(200).json(studentTermSummary);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Uknown Error";
-    console.error("Error fetching specific term summary", message);
+    console.error("Error fetching student term summary", message);
     res.status(500).json({ message });
   }
 };
+
 export const updateTermSummary = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN' && role !== 'TEACHER') {
+      return res.status(403).json({ message: "Access denied. Only School Admins and Teachers can update term summaries." });
+    }
+
     const termSummaryIdParsed = termSummaryIdSchema.safeParse(req.params.id);
     const parsed = termSummarySchema.safeParse(req.body);
 
@@ -288,58 +274,20 @@ export const updateTermSummary = async (
     }
 
     const termSummaryId = termSummaryIdParsed.data;
-    const { termId, studentId, schoolId, totalScore, meanScore, meanGrade } =
+    const { termId, studentId, totalScore, meanScore, meanGrade } =
       parsed.data;
 
     const existingTermSummary = await prisma.termSummary.findFirst({
       where: {
         id: termSummaryId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingTermSummary) {
       return res.status(404).json({
-        message: "Term summary does not exist",
-      });
-    }
-
-    const existingStudent = await prisma.student.findFirst({
-      where: {
-        id: studentId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingStudent) {
-      return res.status(404).json({
-        message: "Student does not exist",
-      });
-    }
-
-    const existingTerm = await prisma.term.findFirst({
-      where: {
-        id: termId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingTerm) {
-      return res.status(404).json({
-        message: "Term does not exist",
-      });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({
-        message: "School does not exist",
+        message: "Term summary not found in your school",
       });
     }
 
@@ -350,7 +298,6 @@ export const updateTermSummary = async (
       data: {
         termId,
         studentId,
-        schoolId,
         totalScore,
         meanScore,
         meanGrade,
@@ -370,6 +317,15 @@ export const deleteTermSummary = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can delete term summaries." });
+    }
+
     const termSummaryIdParsed = termSummaryIdSchema.safeParse(req.params.id);
 
     if (!termSummaryIdParsed.success) {
@@ -383,13 +339,14 @@ export const deleteTermSummary = async (
     const existingTermSummary = await prisma.termSummary.findFirst({
       where: {
         id: termSummaryId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingTermSummary) {
       return res.status(404).json({
-        message: "Term summary does not exist",
+        message: "Term summary not found in your school",
       });
     }
 

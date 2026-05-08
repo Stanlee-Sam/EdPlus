@@ -17,9 +17,15 @@ const subjectSchema = z.object({
 
 export const getSubjects = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const subjects = await prisma.subject.findMany({
       where: {
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
     res.status(200).json(subjects);
@@ -35,6 +41,10 @@ export const getSpecificSubject = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const subjectIdParsed = subjectIdSchema.safeParse(req.params.id);
 
     if (!subjectIdParsed.success) {
@@ -47,6 +57,7 @@ export const getSpecificSubject = async (
       where: {
         id: subjectId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
@@ -67,6 +78,15 @@ export const createSubject = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can create subjects." });
+    }
+
     const parsed = subjectSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -75,35 +95,24 @@ export const createSubject = async (
         errors: parsed.error.flatten().fieldErrors,
       });
     }
-    const { name, schoolId } = parsed.data;
+    const { name } = parsed.data;
 
     const existingSubject = await prisma.subject.findFirst({
       where: {
         name,
-        schoolId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (existingSubject) {
-      return res.status(400).json({ message: "Subject already exists" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
+      return res.status(400).json({ message: "Subject already exists in your school" });
     }
 
     const newSubject = await prisma.subject.create({
       data: {
         name,
-        schoolId,
+        schoolId: userSchoolId as string,
       },
     });
 
@@ -120,6 +129,15 @@ export const updateSubject = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can update subjects." });
+    }
+
     const subjectIdParsed = subjectIdSchema.safeParse(req.params.id);
     const parsed = subjectSchema.safeParse(req.body);
 
@@ -134,18 +152,18 @@ export const updateSubject = async (
     }
 
     const subjectId = subjectIdParsed.data;
-    const { name, schoolId } = parsed.data;
+    const { name } = parsed.data;
 
     const existingSubject = await prisma.subject.findFirst({
       where: {
         id: subjectId,
-
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingSubject) {
-      return res.status(404).json({ message: "Subject does not exist" });
+      return res.status(404).json({ message: "Subject does not exist in your school" });
     }
 
     const updatedSubject = await prisma.subject.update({
@@ -154,7 +172,6 @@ export const updateSubject = async (
       },
       data: {
         name,
-        schoolId,
       },
     });
 
@@ -171,6 +188,15 @@ export const deleteSubject = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can delete subjects." });
+    }
+
     const subjectIdParsed = subjectIdSchema.safeParse(req.params.id);
 
     if (!subjectIdParsed.success) {
@@ -182,12 +208,13 @@ export const deleteSubject = async (
     const existingSubject = await prisma.subject.findFirst({
       where: {
         id: subjectId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingSubject) {
-      return res.status(404).json({ message: "Subject does not exist" });
+      return res.status(404).json({ message: "Subject does not exist in your school" });
     }
 
     await prisma.subject.update({

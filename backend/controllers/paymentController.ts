@@ -16,14 +16,21 @@ const paymentSchema = z.object({
   amount: z.number().int(),
   date: coerce.date(),
   method: z.enum(["CASH", "MPESA", "BANK"]),
-  recordedBy: z.string().uuid(),
   studentId: z.string().uuid(),
   termId: z.string().uuid(),
-  schoolId: z.string().uuid(),
 });
 
 export const createPayment = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId, userId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can record payments." });
+    }
+
     const parsed = paymentSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -33,7 +40,7 @@ export const createPayment = async (req: Request, res: Response) => {
       });
     }
 
-    const { amount, date, method, recordedBy, studentId, termId, schoolId } =
+    const { amount, date, method, studentId, termId } =
       parsed.data;
 
     const existingPayment = await prisma.payment.findFirst({
@@ -42,55 +49,37 @@ export const createPayment = async (req: Request, res: Response) => {
         date,
         studentId,
         termId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (existingPayment) {
-      return res.status(400).json({ message: "Payment already exists" });
-    }
-
-    const existingFinanceAdmin = await prisma.user.findFirst({
-      where: {
-        id: recordedBy,
-      },
-    });
-
-    if (!existingFinanceAdmin) {
-      return res.status(404).json({ message: "Finance admin does not exist" });
+      return res.status(400).json({ message: "Payment already exists for this student on this date" });
     }
 
     const existingStudent = await prisma.student.findFirst({
       where: {
         id: studentId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingStudent) {
-      return res.status(404).json({ message: "Student does not exist" });
+      return res.status(404).json({ message: "Student does not exist in your school" });
     }
 
     const existingTerm = await prisma.term.findFirst({
       where: {
         id: termId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingTerm) {
-      return res.status(404).json({ message: "Term does not exist" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
+      return res.status(404).json({ message: "Term does not exist in your school" });
     }
 
     const payment = await prisma.payment.create({
@@ -99,7 +88,7 @@ export const createPayment = async (req: Request, res: Response) => {
         date,
         method,
         financeAdmin: {
-          connect: { id: recordedBy },
+          connect: { id: userId },
         },
         student: {
           connect: { id: studentId },
@@ -108,7 +97,7 @@ export const createPayment = async (req: Request, res: Response) => {
           connect: { id: termId },
         },
         school: {
-          connect: { id: schoolId },
+          connect: { id: userSchoolId as string },
         },
       },
     });
@@ -120,11 +109,18 @@ export const createPayment = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const getPayments = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+
     const payments = await prisma.payment.findMany({
       where: {
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
@@ -135,11 +131,16 @@ export const getPayments = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
 export const getPayment = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const paymentIdParsed = paymentIdSchema.safeParse(req.params.id);
 
     if (!paymentIdParsed.success) {
@@ -154,11 +155,12 @@ export const getPayment = async (
       where: {
         id: paymentId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!payment) {
-      return res.status(404).json({ message: "Payment does not exist" });
+      return res.status(404).json({ message: "Payment does not exist in your school" });
     }
 
     res.status(200).json(payment);
@@ -168,11 +170,16 @@ export const getPayment = async (
     res.status(500).json({ message });
   }
 };
+
 export const getStudentPayment = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const studentIdParsed = studentIdSchema.safeParse(req.params.id);
 
     if (!studentIdParsed.success) {
@@ -187,17 +194,19 @@ export const getStudentPayment = async (
       where: {
         id: studentId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!existingStudent) {
-      return res.status(404).json({ message: "Student does not exist" });
+      return res.status(404).json({ message: "Student does not exist in your school" });
     }
 
     const payments = await prisma.payment.findMany({
       where: {
         studentId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
@@ -214,6 +223,10 @@ export const getTermPayment = async (
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
     const termIdParsed = termIdSchema.safeParse(req.params.id);
 
     if (!termIdParsed.success) {
@@ -228,17 +241,19 @@ export const getTermPayment = async (
       where: {
         id: termId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!existingTerm) {
-      return res.status(404).json({ message: "Term does not exist" });
+      return res.status(404).json({ message: "Term does not exist in your school" });
     }
 
     const payments = await prisma.payment.findMany({
       where: {
         termId,
         isDeleted: false,
+        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
       },
     });
 
@@ -249,11 +264,16 @@ export const getTermPayment = async (
     res.status(500).json({ message });
   }
 };
+
 export const getSchoolPayment = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId: userSchoolId, role } = user;
     const schoolIdParsed = schoolIdSchema.safeParse(req.params.id);
 
     if (!schoolIdParsed.success) {
@@ -262,22 +282,15 @@ export const getSchoolPayment = async (
       });
     }
 
-    const schoolId = schoolIdParsed.data;
+    const targetSchoolId = role === 'SUPER_ADMIN' ? schoolIdParsed.data : userSchoolId;
 
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
+    if (!targetSchoolId) {
+       return res.status(400).json({ message: "School ID is required" });
     }
 
     const payments = await prisma.payment.findMany({
       where: {
-        schoolId,
+        schoolId: targetSchoolId as string,
         isDeleted: false,
       },
     });
@@ -289,11 +302,21 @@ export const getSchoolPayment = async (
     res.status(500).json({ message });
   }
 };
+
 export const updatePayment = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can update payments." });
+    }
+
     const paymentIdParsed = paymentIdSchema.safeParse(req.params.id);
     const parsed = paymentSchema.safeParse(req.body);
 
@@ -311,63 +334,21 @@ export const updatePayment = async (
     }
 
     const paymentId = paymentIdParsed.data;
-    const { amount, date, method, recordedBy, studentId, termId, schoolId } =
+    const { amount, date, method, studentId, termId } =
       parsed.data;
 
     const existingPayment = await prisma.payment.findFirst({
       where: {
         id: paymentId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingPayment) {
       return res.status(404).json({
-        message: "Payment does not exist",
+        message: "Payment does not exist in your school",
       });
-    }
-
-    const existingFinanceAdmin = await prisma.user.findFirst({
-      where: {
-        id: recordedBy,
-      },
-    });
-
-    if (!existingFinanceAdmin) {
-      return res.status(404).json({ message: "Finance admin does not exist" });
-    }
-
-    const existingStudent = await prisma.student.findFirst({
-      where: {
-        id: studentId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingStudent) {
-      return res.status(404).json({ message: "Student does not exist" });
-    }
-
-    const existingTerm = await prisma.term.findFirst({
-      where: {
-        id: termId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingTerm) {
-      return res.status(404).json({ message: "Term does not exist" });
-    }
-
-    const existingSchool = await prisma.school.findFirst({
-      where: {
-        id: schoolId,
-        isDeleted: false,
-      },
-    });
-
-    if (!existingSchool) {
-      return res.status(404).json({ message: "School does not exist" });
     }
 
     const updatedPayment = await prisma.payment.update({
@@ -378,17 +359,11 @@ export const updatePayment = async (
         amount,
         date,
         method,
-        financeAdmin: {
-          connect: { id: recordedBy },
-        },
         student: {
           connect: { id: studentId },
         },
         term: {
           connect: { id: termId },
-        },
-        school: {
-          connect: { id: schoolId },
         },
       },
     });
@@ -400,11 +375,21 @@ export const updatePayment = async (
     res.status(500).json({ message });
   }
 };
+
 export const deletePayment = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
 ) => {
   try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== 'SCHOOL_ADMIN') {
+      return res.status(403).json({ message: "Access denied. Only School Admins can delete payments." });
+    }
+
     const paymentIdParsed = paymentIdSchema.safeParse(req.params.id);
 
     if (!paymentIdParsed.success) {
@@ -418,12 +403,13 @@ export const deletePayment = async (
     const existingPayment = await prisma.payment.findFirst({
       where: {
         id: paymentId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
     });
 
     if (!existingPayment) {
-      return res.status(404).json({ message: "Payment does not exist" });
+      return res.status(404).json({ message: "Payment does not exist in your school" });
     }
 
     await prisma.payment.update({
