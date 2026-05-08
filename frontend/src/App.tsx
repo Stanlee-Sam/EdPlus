@@ -29,46 +29,122 @@ import ParentFinancials from "./pages/parent/ParentFinancials";
 import ParentResults from "./pages/parent/ParentResults";
 import ParentHomework from "./pages/parent/ParentHomework";
 import ParentTermSummary from "./pages/parent/ParentTermSummary";
+import ProtectedRoute from "./ProtectedRoute";
 const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/superadmin-dashboard" element={<SuperAdminDashboard />} />
-      <Route path="/superadmin-schools" element={<SuperAdminSchools />} />
-      <Route path="/superadmin-users" element={<SuperAdminUsers />} />
-      <Route path="/notifications" element={<Notifications />}>
+      <Route path="/superadmin-dashboard" element={
+        <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
+          <SuperAdminDashboard />
+        </ProtectedRoute>} />
+      <Route path="/superadmin-schools" element={
+        <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
+          <SuperAdminSchools />
+        </ProtectedRoute>} />
+      <Route path="/superadmin-users" element={
+        <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
+          <SuperAdminUsers />
+        </ProtectedRoute>} />
+      <Route path="/notifications" element={
+        <ProtectedRoute>
+          <Notifications />
+        </ProtectedRoute>}>
         <Route index element={<NotificationsIndex />} />
         <Route path=":id" element={<NotificationDetail />} />
       </Route>
-      <Route path="/schooladmin-dashboard" element={<SchoolAdminDashboard />} />
-      <Route path="/schooladmin-academics" element={<SchoolAdminAcademics />} />
+      <Route path="/schooladmin-dashboard" element={
+        <ProtectedRoute allowedRoles={["SCHOOL_ADMIN"]}>
+          <SchoolAdminDashboard />
+        </ProtectedRoute>} />
+      <Route path="/schooladmin-academics" element={
+        <ProtectedRoute allowedRoles={["SCHOOL_ADMIN"]}>
+          <SchoolAdminAcademics />
+        </ProtectedRoute>} />
       <Route
         path="/schooladmin-announcements"
-        element={<SchoolAdminAnnouncements />}
+        element={
+          <ProtectedRoute allowedRoles={["SCHOOL_ADMIN"]}>
+            <SchoolAdminAnnouncements />
+          </ProtectedRoute>}
       />
-      <Route path="/schooladmin-results" element={<SchoolAdminResults />} />
+      <Route path="/schooladmin-results" element={
+        <ProtectedRoute allowedRoles={["SCHOOL_ADMIN"]}>
+          <SchoolAdminResults />
+        </ProtectedRoute>} />
       <Route
         path="/schooladmin-attendance"
-        element={<SchoolAdminAttendance />}
+        element={
+          <ProtectedRoute allowedRoles={["SCHOOL_ADMIN"]}>
+            <SchoolAdminAttendance />
+          </ProtectedRoute>}
       />
-      <Route path="/schooladmin-financials" element={<SchoolAdminFinancials />} />
-      <Route path="/schooladmin-homework" element={<SchoolAdminHomework />} />
-      <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
-      <Route path="/teacher-myclasses" element={<TeacherClasses />} />
-      <Route path="/teacher-students" element={<TeacherStudents />} />
-      <Route path="/teacher-assignments" element={<TeacherAssignments />} />
-      <Route path="/teacher-attendance" element={<TeacherAttendance />} />
-      <Route path="/teacher-results" element={<TeacherResults />} />
-      <Route path="/teacher-messages" element={<TeacherMessages />} />
+      <Route path="/schooladmin-financials" element={
+        <ProtectedRoute allowedRoles={["SCHOOL_ADMIN"]}>
+          <SchoolAdminFinancials />
+        </ProtectedRoute>} />
+      <Route path="/schooladmin-homework" element={
+        <ProtectedRoute allowedRoles={["SCHOOL_ADMIN"]}>
+          <SchoolAdminHomework />
+        </ProtectedRoute>} />
+      <Route path="/teacher-dashboard" element={
+        <ProtectedRoute allowedRoles={["TEACHER"]}>
+          <TeacherDashboard />
+        </ProtectedRoute>} />
+      <Route path="/teacher-myclasses" element={
+        <ProtectedRoute allowedRoles={["TEACHER"]}>
+          <TeacherClasses />
+        </ProtectedRoute>} />
+      <Route path="/teacher-students" element={
+        <ProtectedRoute allowedRoles={["TEACHER"]}>
+          <TeacherStudents />
+        </ProtectedRoute>} />
+      <Route path="/teacher-assignments" element={
+        <ProtectedRoute allowedRoles={["TEACHER"]}>
+          <TeacherAssignments />
+        </ProtectedRoute>} />
+      <Route path="/teacher-attendance" element={
+        <ProtectedRoute allowedRoles={["TEACHER"]}>
+          <TeacherAttendance />
+        </ProtectedRoute>} />
+      <Route path="/teacher-results" element={
+        <ProtectedRoute allowedRoles={["TEACHER"]}>
+          <TeacherResults />
+        </ProtectedRoute>} />
+      <Route path="/teacher-messages" element={
+        <ProtectedRoute allowedRoles={["TEACHER"]}>
+          <TeacherMessages />
+        </ProtectedRoute>} />
 
-      <Route path="/parent-dashboard" element={<ParentDashboard />} />
-      <Route path="/parent-students" element={<ParentStudents />} />
-      <Route path="/parent-attendance" element={<ParentAttendance />} />
-      <Route path="/parent-financials" element={<ParentFinancials />} />
-      <Route path="/parent-results" element={<ParentResults />} />
-      <Route path="/parent-homework" element={<ParentHomework />} />
-      <Route path="/parent-term-summary" element={<ParentTermSummary />} />
+      <Route path="/parent-dashboard" element={
+        <ProtectedRoute allowedRoles={["PARENT"]}>
+          <ParentDashboard />
+        </ProtectedRoute>} />
+      <Route path="/parent-students" element={
+        <ProtectedRoute allowedRoles={["PARENT"]}>
+          <ParentStudents />
+        </ProtectedRoute>} />
+      <Route path="/parent-attendance" element={
+        <ProtectedRoute allowedRoles={["PARENT"]}>
+          <ParentAttendance />
+        </ProtectedRoute>} />
+      <Route path="/parent-financials" element={
+        <ProtectedRoute allowedRoles={["PARENT"]}>
+          <ParentFinancials />
+        </ProtectedRoute>} />
+      <Route path="/parent-results" element={
+        <ProtectedRoute allowedRoles={["PARENT"]}>
+          <ParentResults />
+        </ProtectedRoute>} />
+      <Route path="/parent-homework" element={
+        <ProtectedRoute allowedRoles={["PARENT"]}>
+          <ParentHomework />
+        </ProtectedRoute>} />
+      <Route path="/parent-term-summary" element={
+        <ProtectedRoute allowedRoles={["PARENT"]}>
+          <ParentTermSummary />
+        </ProtectedRoute>} />
 
       {/* 
       {/* <Route path="about" element={<About />} /> */}

@@ -5,14 +5,17 @@ import "./index.css";
 import App from "./App.tsx";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "sonner";
+import { AuthProvider } from "./context/AuthContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <ThemeProvider defaultTheme="system" storageKey="edplus-theme">
-        <Toaster position="top-center" richColors />
-        <App />
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="system" storageKey="edplus-theme">
+          <Toaster position="top-center" richColors />
+          <App />
+        </ThemeProvider>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 );

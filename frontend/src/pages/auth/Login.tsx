@@ -9,12 +9,13 @@ import axios from "axios";
 import { toast } from "sonner";
 import api from "../../../utils/api";
 import { MoonLoader } from "react-spinners";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -31,8 +32,7 @@ const Login = () => {
         password,
       });
       toast.success("Login successful");
-      localStorage.setItem("token", response.data.token);
-      navigate("/");
+      login(response.data.token);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         toast.error(error?.response?.data.message || "Something went wrong!");
