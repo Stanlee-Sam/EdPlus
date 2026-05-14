@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 interface User {
   userId: string;
   role: string;
-  schoolId: string;
+  schoolId?: string | null;
 }
 
 interface AuthContextType {

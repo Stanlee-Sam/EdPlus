@@ -3,6 +3,7 @@ import {
   Calendar,
   FileText,
   LayoutDashboard,
+  LogOut,
   Megaphone,
 } from "lucide-react";
 import { GraduationCap } from "lucide-react";
@@ -11,6 +12,7 @@ import { ChartColumn } from "lucide-react";
 import { Settings } from "lucide-react";
 import logo from "../../../assets/EdPlus_Logo.png";
 import { useLocation } from "react-router";
+import { useAuth } from "../../../context/AuthContext";
 
 type SidebarRole = "super-admin" | "school-admin" | "teacher" | "parent";
 
@@ -104,6 +106,7 @@ const SIDEBAR_ITEMS: Record<
 
 const Sidebar = ({ role }: SidebarProps) => {
   const { pathname } = useLocation();
+  const { logout } = useAuth();
   const items = SIDEBAR_ITEMS[role];
   return (
     <div className="flex h-full flex-col gap-15 p-6 bg-sidebar">
@@ -133,6 +136,13 @@ const Sidebar = ({ role }: SidebarProps) => {
           );
         })}
       </nav>
+      <button
+        onClick={logout}
+        className="flex flex-row items-center gap-2 rounded-sm py-2 px-4 text-muted-foreground hover:text-foreground hover:bg-muted mt-auto"
+      >
+        <LogOut className="mr-2 h-4 w-4" />
+        <p>Logout</p>
+      </button>
     </div>
   );
 };

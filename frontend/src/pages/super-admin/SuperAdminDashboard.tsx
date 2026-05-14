@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
-import { Edit, EllipsisVertical, GraduationCap, School, X } from "lucide-react";
+import { Edit, GraduationCap, School, X } from "lucide-react";
 import { Users } from "lucide-react";
 import { CirclePlus } from "lucide-react";
 import api from "../../../utils/api";
@@ -33,15 +33,28 @@ const SuperAdminDashboard = () => {
 
   useEffect(() => {
     const fetchSchools = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
       setLoading(true);
       try {
-        const response = await api.get("/schools");
+        const response = await api.get("/schools", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setSchools(response.data);
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          toast.error(
-            error.response?.data?.message || "Failed to load schools data",
-          );
+          if (error.response?.status === 401) {
+            toast.error("Invalid token. Please login");
+          } else {
+            toast.error(
+              error.response?.data?.message || "Failed to load schools data",
+            );
+          }
         }
       } finally {
         setLoading(false);
@@ -51,16 +64,28 @@ const SuperAdminDashboard = () => {
     fetchSchools();
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     const fetchUsers = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
       try {
-        const response = await api.get("/users");
+        const response = await api.get("/users", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setUsers(response.data);
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          toast.error(
-            error.response?.data?.message || "Failed to load schools data",
-          );
+          if (error.response?.status === 401) {
+            toast.error("Invalid token. Please login");
+          } else {
+            toast.error(
+              error.response?.data?.message || "Failed to load schools data",
+            );
+          }
         }
       }
     };
@@ -103,32 +128,68 @@ const SuperAdminDashboard = () => {
   const handleCreateSchool = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      toast.error("Invalid token. Please login");
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await api.post("/schools", formData);
+      const response = await api.post("/schools", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setSchools((prev) => [response.data, ...prev]);
       toast.success("School created successfully");
       closeModal();
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Failed to create school");
+        if (error.response?.status === 401) {
+          toast.error("Invalid token. Please login");
+        } else {
+          toast.error(error.response?.data?.message || "Failed to create school");
+        }
       }
     } finally {
       setLoading(false);
     }
   };
-  const handleUpdateSchool = async ( e : React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleUpdateSchool = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      toast.error("Invalid token. Please login");
+      return;
+    }
 
     try {
-      const response = await api.put(`/schools/${editingFieldId}`, formData)
-      setSchools((prevSchools) =>  prevSchools.map((prevSchool) => prevSchool.id === editingFieldId ? {...prevSchool, ...response.data} : prevSchool))
-      
-      toast.success("School updated successfully")
-      closeModal()
+      const response = await api.put(`/schools/${editingFieldId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setSchools((prevSchools) =>
+        prevSchools.map((prevSchool) =>
+          prevSchool.id === editingFieldId
+            ? { ...prevSchool, ...response.data }
+            : prevSchool,
+        ),
+      );
+
+      toast.success("School updated successfully");
+      closeModal();
     } catch (error) {
-      if(axios.isAxiosError(error)){
-        toast.error(error.response?.data?.message || "")
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          toast.error("Invalid token. Please login");
+        } else {
+          toast.error(error.response?.data?.message || "");
+        }
       }
     }
   };
@@ -337,9 +398,12 @@ const SuperAdminDashboard = () => {
                             {school.location}
                           </p>
                         </div>
-                        <span onClick={() => openEditModal(school)} className="text-[10px] text-outline-variant font-medium">
+                        <span
+                          onClick={() => openEditModal(school)}
+                          className="text-[10px] text-outline-variant font-medium"
+                        >
                           <Edit />
-                        </span> 
+                        </span>
                       </div>
                     ))
                   )}

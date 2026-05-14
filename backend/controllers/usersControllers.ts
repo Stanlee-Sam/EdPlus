@@ -124,6 +124,75 @@ export const registerUsers = async (
   }
 };
 
+const schoolAdminSchema = z.object({
+  name: z.string(),
+  email: z.string().email(),
+  password: z.string().min(6),
+  phone: z.string(),
+  schoolName: z.string(),
+  schoolLocation: z.string(),
+  schoolContactEmail: z.string().email(),
+  schoolContactPhone: z.string(),
+});
+
+export const registerSchoolAdmin = async (
+  req: Request<{}, {}, unknown>,
+  res: Response,
+) => {
+  try {
+    const parsed = schoolAdminSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: parsed.error.flatten().fieldErrors,
+      });
+    }
+    const { name, email, password, phone, schoolName, schoolLocation, schoolContactEmail, schoolContactPhone } = parsed.data;
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user and school in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const school = await tx.school.create({
+        data: {
+          name: schoolName,
+          location: schoolLocation,
+          contactEmail: schoolContactEmail,
+          contactPhone: schoolContactPhone,
+        },
+      });
+
+      const user = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          phone,
+          role: "SCHOOL_ADMIN",
+          schoolId: school.id,
+        },
+        include: {
+          school: true,
+        },
+      });
+
+      return { user, school };
+    });
+
+    res.status(201).json({ message: "School admin created successfully", user: result.user });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error creating school admin:", message);
+    res.status(500).json({ message });
+  }
+};
+
 export const loginUser = async (
   req: Request<{}, {}, unknown>,
   res: Response,

@@ -2,8 +2,7 @@ import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
 import { useEffect, useState } from "react";
 import {
-  Building,
-  ChevronsLeft,
+    ChevronsLeft,
   ChevronsRight,
   CirclePlus,
   Edit,
@@ -17,7 +16,6 @@ import { Hourglass } from "lucide-react";
 import { ChevronsDown } from "lucide-react";
 import { ArrowDownWideNarrow } from "lucide-react";
 import { MapPin } from "lucide-react";
-import { EllipsisVertical } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
 import api from "../../../utils/api";
@@ -92,9 +90,13 @@ const SuperAdminSchools = () => {
         setSchools(response.data);
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          toast.error(
-            error?.response?.data.message || "Failed to fetch schools",
-          );
+          if (error.response?.status === 401) {
+            toast.error("Invalid token. Please login");
+          } else {
+            toast.error(
+              error?.response?.data.message || "Failed to fetch schools",
+            );
+          }
         }
       } finally {
         setLoading(false);
@@ -130,7 +132,13 @@ const SuperAdminSchools = () => {
       const response = await api.get(`/users?schoolId=${school.id}&role=SCHOOL_ADMIN`);
       setSchoolAdmins(response.data);
     } catch (error) {
-      console.error("Failed to fetch school admins", error);
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          toast.error("Invalid token. Please login");
+        } else {
+          console.error("Failed to fetch school admins", error);
+        }
+      }
     }
   };
 
@@ -163,7 +171,11 @@ const SuperAdminSchools = () => {
       closeModal();
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Failed to create school");
+        if (error.response?.status === 401) {
+          toast.error("Invalid token. Please login");
+        } else {
+          toast.error(error.response?.data?.message || "Failed to create school");
+        }
       }
     } finally {
       setLoading(false);
@@ -190,7 +202,11 @@ const SuperAdminSchools = () => {
       closeModal();
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "");
+        if (error.response?.status === 401) {
+          toast.error("Invalid token. Please login");
+        } else {
+          toast.error(error.response?.data?.message || "");
+        }
       }
     }
   };

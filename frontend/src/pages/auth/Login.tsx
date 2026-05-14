@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Mail } from "lucide-react";
 import { Lock } from "lucide-react";
 import { ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "sonner";
 import api from "../../../utils/api";
@@ -31,11 +30,16 @@ const Login = () => {
         email,
         password,
       });
+      if (!response.data?.accessToken) {
+        throw new Error("No token received from server");
+      }
       toast.success("Login successful");
-      login(response.data.token);
+      login(response.data.accessToken);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         toast.error(error?.response?.data.message || "Something went wrong!");
+      } else if (error instanceof Error) {
+        toast.error(error.message);
       }
     } finally {
       setLoading(false);
@@ -138,6 +142,11 @@ const Login = () => {
               Don't have an account?{" "}
               <a href="/signup" className="text-primary">
                 Sign Up
+              </a>
+            </p>
+            <p className="mt-2">
+              <a href="/school-admin-signup" className="text-primary text-sm">
+                Register your school instead
               </a>
             </p>
           </div>

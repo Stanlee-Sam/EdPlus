@@ -28,8 +28,9 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // Multi-tenancy check: All roles except SUPER_ADMIN must have a schoolId
-  if (user?.role !== 'SUPER_ADMIN' && !user?.schoolId) {
+  // Multi-tenancy check: SCHOOL_ADMIN and TEACHER roles must have a schoolId
+  // PARENT can exist without a schoolId until they're associated with one
+  if (user && (user.role === 'SCHOOL_ADMIN' || user.role === 'TEACHER') && !user?.schoolId) {
     return <Navigate to="/unauthorized" replace />;
   }
 

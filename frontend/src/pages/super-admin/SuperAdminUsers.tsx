@@ -6,7 +6,6 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Edit,
-  EllipsisVertical,
   Mail,
   UserPlus,
   Users,
@@ -16,7 +15,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import api from "../../../utils/api";
 import EmptyState from "@/components/ui/layout/EmptyState";
-import { data } from "react-router";
 
 interface User {
   id: string;
@@ -111,7 +109,11 @@ const SuperAdminUsers = () => {
         setUsers(response.data);
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          toast.error(error?.response?.data.message || "Something went wrong");
+          if (error.response?.status === 401) {
+            toast.error("Invalid token. Please login");
+          } else {
+            toast.error(error?.response?.data.message || "Something went wrong");
+          }
         }
       } finally {
         setLoading(false);
@@ -126,7 +128,7 @@ const SuperAdminUsers = () => {
 
     setLoading(true);
     try {
-      const response = await api.patch(`/users/${editingFieldId}/role`, {
+      await api.patch(`/users/${editingFieldId}/role`, {
         userId: editingFieldId,
         role: formData.role,
       });
@@ -140,9 +142,13 @@ const SuperAdminUsers = () => {
       toast.success("User role updated successfully!");
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error(
-          error?.response?.data.message || "Failed to update user role!",
-        );
+        if (error.response?.status === 401) {
+          toast.error("Invalid token. Please login");
+        } else {
+          toast.error(
+            error?.response?.data.message || "Failed to update user role!",
+          );
+        }
       }
     } finally {
       setLoading(false);
