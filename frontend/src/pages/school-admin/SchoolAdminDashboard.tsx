@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
 import DoughnutChart from "@/components/Charts/DoughnutChart";
@@ -10,9 +10,24 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
+import api from "../../../utils/api";
+import axios from "axios";
+import { toast } from "sonner";
+
 
 const SchoolAdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [createRole, setCreateRole] = useState<"teacher" | "parent">("teacher");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
 
   const today = new Date();
 
@@ -23,6 +38,120 @@ const SchoolAdminDashboard = () => {
     month: "long",
     day: "numeric",
   });
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/students`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setStudents(response.data);
+      } catch (error) {
+        if(axios.isAxiosError(error)){
+          toast.error(error.response?.data.message || "Failed to fetch students")
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  },[]);
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/users/teachers`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setTeachers(response.data);
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeachers();
+  },[]);
+
+  const openCreateUserModal = (role: "teacher" | "parent") => {
+    setCreateRole(role);
+    setFormData({ name: "", email: "", phone: "", password: "" });
+    setIsUserModalOpen(true);
+  };
+
+  const closeCreateUserModal = () => {
+    setIsUserModalOpen(false);
+    setFormData({ name: "", email: "", phone: "", password: "" });
+  };
+
+  const handleCreateUser = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Invalid token. Please login");
+      return;
+    }
+
+    const { name, email, phone, password } = formData;
+    if (!name || !email || !phone || !password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const endpoint = createRole === "teacher" ? "/users/register-teacher" : "/users/register-parent";
+      await api.post(
+        endpoint,
+        { name, email, phone, password },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      toast.success(`${createRole === "teacher" ? "Teacher" : "Parent"} added successfully`);
+      closeCreateUserModal();
+
+      if (createRole === "teacher") {
+        const teacherResponse = await api.get(`/users/teachers`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setTeachers(teacherResponse.data);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data.message || "Failed to create user");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -55,6 +184,30 @@ const SchoolAdminDashboard = () => {
                 Your academic overview for {formattedDate}.
               </p>
             </section>
+            <section className="mb-8 bg-card border border-border/40 rounded-lg p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h4 className="text-lg font-bold text-on-surface">User Management</h4>
+                <p className="text-sm text-on-surface-variant">
+                  Add teachers and parents directly under your school.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => openCreateUserModal("teacher")}
+                  className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-semibold text-sm hover:bg-primary/80 transition-colors cursor-pointer"
+                >
+                  Add Teacher
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openCreateUserModal("parent")}
+                  className="bg-sidebar text-on-surface px-4 py-2 rounded-md font-semibold text-sm hover:opacity-80 transition-colors cursor-pointer"
+                >
+                  Add Parent
+                </button>
+              </div>
+            </section>
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               <div className="bg-card rounded-lg p-6 shadow-[0_20px_40px_rgba(42,53,50,0.06)] flex flex-col justify-between h-40">
                 <div className="flex justify-between items-start">
@@ -70,7 +223,7 @@ const SchoolAdminDashboard = () => {
                 </div>
                 <div>
                   <span className="text-3xl font-black text-on-surface">
-                    1,284
+                    {students.length}
                   </span>
                   <p className="text-[12px] text-primary font-bold mt-1 flex items-center gap-1">
                     <TrendingUp
@@ -95,7 +248,7 @@ const SchoolAdminDashboard = () => {
                 </div>
                 <div>
                   <span className="text-3xl font-black text-on-surface">
-                    86
+                    {teachers.length}
                   </span>
                   <p className="text-[12px] text-on-surface-variant font-medium mt-1">
                     Active Staff
@@ -372,10 +525,88 @@ const SchoolAdminDashboard = () => {
           </div>
         </section>
       </main>
+      {isUserModalOpen ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/45 px-4">
+          <div className="w-full max-w-lg bg-card rounded-lg p-6 shadow-[0_20px_40px_rgba(42,53,50,0.16)]">
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <h4 className="text-2xl font-bold text-on-surface">
+                  Add {createRole === "teacher" ? "Teacher" : "Parent"}
+                </h4>
+                <p className="text-sm text-on-surface-variant mt-1">
+                  This user will be linked to your school automatically.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeCreateUserModal}
+                className="text-on-surface-variant hover:text-on-surface text-sm font-bold cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+            <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-xs font-bold text-on-surface-variant uppercase">Full Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(event) => setFormData((prev) => ({ ...prev, name: event.target.value }))}
+                  className="w-full p-3 rounded-sm border border-input bg-input outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+                  placeholder="Jane Doe"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-bold text-on-surface-variant uppercase">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(event) => setFormData((prev) => ({ ...prev, email: event.target.value }))}
+                  className="w-full p-3 rounded-sm border border-input bg-input outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+                  placeholder="name@school.com"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-bold text-on-surface-variant uppercase">Phone</label>
+                <input
+                  type="text"
+                  value={formData.phone}
+                  onChange={(event) => setFormData((prev) => ({ ...prev, phone: event.target.value }))}
+                  className="w-full p-3 rounded-sm border border-input bg-input outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+                  placeholder="0712345678"
+                />
+              </div>
+              <div className="flex flex-col gap-2 md:col-span-2">
+                <label className="text-xs font-bold text-on-surface-variant uppercase">Temporary Password</label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(event) => setFormData((prev) => ({ ...prev, password: event.target.value }))}
+                  className="w-full p-3 rounded-sm border border-input bg-input outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+                  placeholder="At least 6 characters"
+                />
+              </div>
+              <div className="md:col-span-2 flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeCreateUserModal}
+                  className="px-4 py-2 rounded-md bg-sidebar text-on-surface font-semibold text-sm hover:opacity-80 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/80 transition-colors cursor-pointer"
+                >
+                  {loading ? "Saving..." : `Create ${createRole === "teacher" ? "Teacher" : "Parent"}`}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
 
 export default SchoolAdminDashboard;
-
-

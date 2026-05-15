@@ -21,15 +21,21 @@ export const getClasses = async (req: Request, res: Response) => {
     const user = req.user;
     if (!user) return res.status(401).json({ message: "Unauthorized" });
 
-    const { schoolId, role } = user;
+    const { schoolId: userSchoolId, role } = user;
+    const querySchoolId = req.query.schoolId as string | undefined;
+    const effectiveSchoolId = role === "SUPER_ADMIN" ? querySchoolId : userSchoolId;
+
+    if (!effectiveSchoolId) {
+      return res.status(400).json({ message: "schoolId is required" });
+    }
 
     const classes = await prisma.class.findMany({
       where: {
         isDeleted: false,
-        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
+        schoolId: effectiveSchoolId,
       },
     });
-    res.status(200).json({ classes });
+    res.status(200).json(classes);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Uknown Error";
     console.error("Error fetching classes", message);

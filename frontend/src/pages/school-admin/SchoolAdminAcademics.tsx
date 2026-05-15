@@ -9,48 +9,258 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import api from "../../../utils/api";
+import { toast } from "sonner";
+
+type AcademicTerm = {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+};
 
 const SchoolAdminAcademics = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [levels, setLevels] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [terms, setTerms] = useState<AcademicTerm[]>([]);
+
+  useEffect(() => {
+    const fetchLevels = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+      setLoading(true)
+      try {
+        const response = await api.get(`/levels`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setLevels(response.data);
+      } catch (error) {
+        if(axios.isAxiosError(error)){
+          toast.error(error.response?.data.message || "Failed to fetch levels")
+        }
+      }
+      finally{
+        setLoading(false)
+      }
+    };
+
+    fetchLevels();
+  }, []);
+
+    useEffect(() => {
+    const fetchClasses = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+      setLoading(true)
+      try {
+        const response = await api.get(`/classes`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setClasses(response.data);
+      } catch (error) {
+        if(axios.isAxiosError(error)){
+          toast.error(error.response?.data.message || "Failed to fetch levels")
+        }
+      }
+      finally{
+        setLoading(false)
+      }
+    };
+
+    fetchClasses();
+  }, []);
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/users/teachers`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setTeachers(response.data);
+      } catch (error) {
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTeachers();
+  },[]);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/students`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setStudents(response.data);
+      } catch (error) {
+        if(axios.isAxiosError(error)){
+          toast.error(error.response?.data.message || "Failed to fetch students")
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  },[]);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/subjects`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setSubjects(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data.message || "Failed to fetch subjects");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
+
+  useEffect(() => {
+    const fetchTerms = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/terms`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setTerms(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data.message || "Failed to fetch terms");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTerms();
+  }, []);
+
+  const currentProgressValue = (() => {
+    if (!terms.length) return "No active term";
+
+    const now = new Date();
+    const activeTerm = terms.find((term) => {
+      const start = new Date(term.startDate);
+      const end = new Date(term.endDate);
+      return now >= start && now <= end;
+    });
+
+    if (!activeTerm) return "No active term";
+
+    const start = new Date(activeTerm.startDate);
+    const diffInMs = now.getTime() - start.getTime();
+    const week = Math.max(1, Math.floor(diffInMs / (1000 * 60 * 60 * 24 * 7)) + 1);
+
+    return `${activeTerm.name} - Week ${week}`;
+  })();
+
+
+
   const stats = [
     {
       icon: Layers,
       title: "Academic Levels",
-      value: 12,
+      value: levels.length,
       linkText: "Manage Levels",
     },
     {
       icon: DoorOpen,
       title: "Active Classes",
-      value: 48,
+      value: classes.length,
       linkText: "View All Classes",
     },
     {
       icon: Users,
       title: "Faculty Members",
-      value: 86,
+      value: teachers.length,
       linkText: "Faculty Directory",
     },
     {
       icon: User,
       title: "Enrolled Students",
-      value: 1284,
+      value: students.length,
       linkText: "Student List",
     },
     {
       icon: BookOpen,
       title: "Curriculum Subjects",
-      value: 24,
+      value: subjects.length,
       linkText: "Curriculum Map",
     },
     {
       icon: Calendar,
       title: "Current Progress",
-      value: "Term 1 - Week 8",
+      value: currentProgressValue,
       linkText: "Term Analytics",
     },
   ];
+
+  
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -154,5 +364,3 @@ const SchoolAdminAcademics = () => {
 };
 
 export default SchoolAdminAcademics;
-
-

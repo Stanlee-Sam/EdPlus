@@ -36,34 +36,34 @@ app.use("/users", userRoute);
 //school endpoint
 app.use("/schools", schoolRoute);
 //class endpoint
-app.use("/class", classRoute);
+app.use("/classes", classRoute);
 //student endpoint
-app.use("/student", studentRoute);
+app.use("/students", studentRoute);
 //attendance endpoint
 app.use("/attendance", attendanceRoute);
 //homework endpoint
 app.use("/homework", homeworkRoute);
 //subject enpoint
-app.use("/subject", subjectRoute);
+app.use("/subjects", subjectRoute);
 //TCS endpoint
 app.use("/tcs", TCSRoute);
 //result endpoint
 app.use("/results", resultRoute);
 //term summary endpoint
-app.use("/termSummary", termSummaryRoute);
+app.use("/termSummaries", termSummaryRoute);
 //term endpoint
-app.use("/term", termRoute);
+app.use("/terms", termRoute);
 //announcement endpoint
-app.use("/announcement", announcementRoute);
+app.use("/announcements", announcementRoute);
 //notification endpoint
-app.use("/notification", notificationRoute);
+app.use("/notifications", notificationRoute);
 //level endpoint
-app.use("/level", levelRoute);
+app.use("/levels", levelRoute);
 //fee structure endpoint
-app.use("/feeStructure", feeStructureRoute);
+app.use("/feeStructures", feeStructureRoute);
 //fee item endpoint
-app.use("/feeItem", feeItemRoute);
+app.use("/feeItems", feeItemRoute);
 //payment endpoint
-app.use("/payment", paymentRoute);
+app.use("/payments", paymentRoute);
 
 export default app;

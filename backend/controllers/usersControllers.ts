@@ -85,6 +85,47 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
+export const getTeachers = async (req : Request, res : Response) => {
+  try{
+  const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId: userSchoolId, role } = user;
+    const querySchoolId = req.query.schoolId as string | undefined;
+
+    // SUPER_ADMIN can request any specific school via query; SCHOOL_ADMIN is restricted to own school.
+    const effectiveSchoolId = role === "SUPER_ADMIN" ? querySchoolId : (userSchoolId as string | undefined);
+    if (!effectiveSchoolId) {
+      return res.status(400).json({ message: "schoolId is required" });
+    }
+
+    const teachers = await prisma.user.findMany({
+      where: {
+        role: "TEACHER",
+        schoolId: effectiveSchoolId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        schoolId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    res.json(teachers);
+
+  }catch(error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error fetching teachers:", message);
+    res.status(500).json({ message });
+    
+  }
+}
+
 export const registerUsers = async (
   req: Request<{}, {}, unknown>,
   res: Response,
@@ -121,6 +162,94 @@ export const registerUsers = async (
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error creating user:", message);
     res.status(500).json({ message });
+  }
+};
+
+const registerSchoolScopedUser = async (
+  req: Request<{}, {}, unknown>,
+  res: Response,
+  role: "TEACHER" | "PARENT",
+) => {
+  const user = req.user;
+  if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+  const { role: adminRole, schoolId: adminSchoolId } = user;
+  if (adminRole !== "SCHOOL_ADMIN") {
+    return res.status(403).json({ message: "Access denied. Only School Admins can create users for a school." });
+  }
+
+  if (!adminSchoolId) {
+    return res.status(400).json({ message: "School admin is not linked to a school." });
+  }
+
+  const parsed = registerSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: parsed.error.flatten().fieldErrors,
+    });
+  }
+
+  const { name, email, password, phone } = parsed.data;
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingUser) {
+    return res.status(400).json({ message: "User already exists" });
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const createdUser = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+      role,
+      schoolId: adminSchoolId,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      role: true,
+      schoolId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return res.status(201).json({
+    message: `${role === "TEACHER" ? "Teacher" : "Parent"} created successfully`,
+    user: createdUser,
+  });
+};
+
+export const registerTeacher = async (
+  req: Request<{}, {}, unknown>,
+  res: Response,
+) => {
+  try {
+    return await registerSchoolScopedUser(req, res, "TEACHER");
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error creating teacher:", message);
+    return res.status(500).json({ message });
+  }
+};
+
+export const registerParent = async (
+  req: Request<{}, {}, unknown>,
+  res: Response,
+) => {
+  try {
+    return await registerSchoolScopedUser(req, res, "PARENT");
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error creating parent:", message);
+    return res.status(500).json({ message });
   }
 };
 
