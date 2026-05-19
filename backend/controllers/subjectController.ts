@@ -12,7 +12,6 @@ const prisma = new PrismaClient({ adapter });
 const subjectIdSchema = z.string().uuid();
 const subjectSchema = z.object({
   name: z.string(),
-  schoolId: z.string().uuid(),
 });
 
 export const getSubjects = async (req: Request, res: Response) => {

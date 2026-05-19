@@ -14,7 +14,6 @@ const studentSchema = z.object({
   name: string(),
   admissionNumber: string(),
   classId: string().uuid(),
-  schoolId: string().uuid(),
 });
 
 export const getStudents = async (req: Request, res: Response) => {

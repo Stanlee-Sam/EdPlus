@@ -12,7 +12,6 @@ const levelIdSchema = z.string().uuid();
 const schoolIdSchema = z.string().uuid();
 const levelSchema = z.object({
   name: z.string(),
-  schoolId: z.string().uuid(),
   order: z.number().int(),
 });
 

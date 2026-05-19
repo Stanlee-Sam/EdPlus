@@ -12,7 +12,6 @@ const classIdSchema = z.string().uuid();
 const classSchema = z.object({
   name: string(),
   classTeacherId: string().uuid(),
-  schoolId: string().uuid(),
   levelId: string().uuid(),
 });
 

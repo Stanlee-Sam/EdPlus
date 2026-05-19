@@ -17,6 +17,7 @@ import levelRoute from "../routes/levelRoutes.js";
 import feeStructureRoute from "../routes/feeStructureRoutes.js";
 import feeItemRoute from "../routes/feeItemRoutes.js";
 import paymentRoute from "../routes/paymentRoutes.js";
+import studentParentRoute from "../routes/studentParentRoutes.js";
 
 const app = express();
 
@@ -65,5 +66,7 @@ app.use("/feeStructures", feeStructureRoute);
 app.use("/feeItems", feeItemRoute);
 //payment endpoint
 app.use("/payments", paymentRoute);
+//student-parent link endpoint
+app.use("/student-parents", studentParentRoute);
 
 export default app;
