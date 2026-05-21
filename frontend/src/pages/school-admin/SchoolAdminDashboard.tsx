@@ -49,6 +49,12 @@ type ParentsResponse = ParentUser[] | { users: ParentUser[] };
 type ClassesResponse = SchoolClass[] | { classes: SchoolClass[] };
 type LevelsResponse = Level[] | { levels: Level[] };
 type TeachersResponse = Teacher[] | { users: Teacher[] };
+type AttendanceStats = {
+  presentStudents: number;
+  absentStudents: number;
+  totalRecords: number;
+  attendancePercentage: number;
+};
 
 const SchoolAdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -58,6 +64,7 @@ const SchoolAdminDashboard = () => {
   const [parents, setParents] = useState<ParentUser[]>([]);
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [levels, setLevels] = useState<Level[]>([]);
+  const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
@@ -262,6 +269,35 @@ const SchoolAdminDashboard = () => {
 
     loadTeachers();
   },[]);
+
+  useEffect(() => {
+    const fetchAttendanceStats = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }  
+
+      setLoading(true);
+      try {
+        const response = await api.get<AttendanceStats>(`/attendance/stats`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setAttendanceStats(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data.message || "Failed to fetch attendance stats");
+        }
+      } finally {
+        setLoading(false);
+      }
+
+    };
+    fetchAttendanceStats();
+  }, []);
 
   const openCreateUserModal = (role: "teacher" | "parent") => {
     setCreateRole(role);
@@ -743,10 +779,10 @@ const SchoolAdminDashboard = () => {
                 </div>
                 <div>
                   <span className="text-3xl font-black text-on-surface">
-                    94.2%
+                    {attendanceStats ? `${attendanceStats.attendancePercentage}%` : "--"}
                   </span>
                   <p className="text-[12px] text-on-surface-variant font-medium mt-1">
-                    Overall percentage
+                    Today's percentage
                   </p>
                 </div>
               </div>
@@ -786,7 +822,7 @@ const SchoolAdminDashboard = () => {
                   <DoughnutChart />
                   <div className="absolute flex flex-col items-center">
                     <span className="text-4xl font-black text-on-surface">
-                      91%
+                      {attendanceStats ? `${attendanceStats.attendancePercentage}%` : "--"}
                     </span>
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter">
                       Present
@@ -801,7 +837,9 @@ const SchoolAdminDashboard = () => {
                         Present Students
                       </span>
                     </div>
-                    <span className="font-bold text-on-surface">1,168</span>
+                    <span className="font-bold text-on-surface">
+                      {attendanceStats ? attendanceStats.presentStudents : "--"}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-3">
@@ -810,7 +848,9 @@ const SchoolAdminDashboard = () => {
                         Absent/Late
                       </span>
                     </div>
-                    <span className="font-bold text-on-surface">116</span>
+                    <span className="font-bold text-on-surface">
+                      {attendanceStats ? attendanceStats.absentStudents : "--"}
+                    </span>
                   </div>
                 </div>
                 <button className="w-full mt-8 py-3 bg-primary hover:bg-primary/70 font-bold text-sm rounded-xl transition-all">

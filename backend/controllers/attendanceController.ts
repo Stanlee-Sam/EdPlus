@@ -18,11 +18,13 @@ const attendanceSchema = z.object({
   studentId: z.string().uuid(),
   date: z.coerce.date(),
   status: z.nativeEnum(AttendanceStatus),
-  recordedBy: z.string().uuid(),
   termId: z.string().uuid(),
-  schoolId: z.string().uuid(),
 });
 const studentIdSchema = z.string().uuid();
+const attendanceStatsQuerySchema = z.object({
+  date: z.coerce.date().optional(),
+  termId: z.string().uuid().optional(),
+});
 
 export const createAttendance = async (
   req: Request<{}, {}, unknown>,
@@ -343,3 +345,68 @@ export const getAttendancePerStudent = async (
     res.status(500).json({ message });
   }
 };
+
+export const getAttendancePercentage = async (req : Request, res : Response) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role } = user;
+    const parsedQuery = attendanceStatsQuerySchema.safeParse(req.query);
+    if (!parsedQuery.success) {
+      return res.status(400).json({
+        message: "Invalid query params",
+        errors: parsedQuery.error.flatten().fieldErrors,
+      });
+    }
+
+    const { date, termId } = parsedQuery.data;
+
+    const targetDate = date ?? new Date();
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const baseWhere = {
+      isDeleted: false,
+      ...(role !== "SUPER_ADMIN" ? { schoolId: schoolId as string } : {}),
+      ...(termId ? { termId } : {}),
+      date: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+    };
+
+    const presentStudents = await prisma.attendance.count({
+      where : {
+        ...baseWhere,
+        status : {
+          in : ['present', 'late']
+        },
+      }
+    });
+
+    const absentStudents = await prisma.attendance.count({
+      where: {
+        ...baseWhere,
+        status: "absent",
+      },
+    });
+
+    const totalRecords = presentStudents + absentStudents;
+    const percentage = totalRecords === 0 ? 0 : (presentStudents / totalRecords) * 100;
+
+    res.status(200).json({
+      presentStudents,
+      absentStudents,
+      totalRecords,
+      attendancePercentage: Number(percentage.toFixed(2)),
+    });
+
+  } catch(error) {
+    const message = error instanceof Error ? error.message : "Unknown Error";
+    console.error("Error fetching attendance percentage", message);
+    res.status(500).json({ message });
+  }
+}
