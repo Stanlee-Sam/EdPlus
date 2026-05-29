@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
 import {
@@ -14,13 +15,26 @@ import {
   Users,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import api from "../../../utils/api";
+import axios from "axios";
 
+type AttendanceStats = {
+  presentStudents: number;
+  absentStudents: number;
+  totalRecords: number;
+  attendancePercentage: number;
+};
 const SchoolAdminAttendance = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [attendanceStats, setAttendanceStats] =
+    useState<AttendanceStats | null>(null);
+
   const stats = [
     {
       label: "Total Present",
-      value: "32",
+      value: attendanceStats ? attendanceStats.presentStudents : "--",
       valueClassName: "text-primary",
       icon: CheckCircle,
       iconWrapperClassName: "bg-primary/10 text-primary",
@@ -33,7 +47,7 @@ const SchoolAdminAttendance = () => {
     },
     {
       label: "Total Absent",
-      value: "04",
+      value: attendanceStats ? attendanceStats.absentStudents : "--",
       valueClassName: "text-error",
       icon: CircleX,
       iconWrapperClassName: "bg-error/10 text-error",
@@ -46,7 +60,7 @@ const SchoolAdminAttendance = () => {
     },
     {
       label: "Average Rate",
-      value: "92%",
+      value: attendanceStats ? `${attendanceStats.attendancePercentage}%` : "--",
       valueClassName: "text-on-surface",
       icon: ChartColumn,
       iconWrapperClassName: "bg-accent text-on-surface-variant",
@@ -97,6 +111,36 @@ const SchoolAdminAttendance = () => {
       remarkType: "note",
     },
   ];
+
+  useEffect(() => {
+    const fetchAttendanceStats = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get<AttendanceStats>(`/attendance/stats`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setAttendanceStats(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(
+            error.response?.data.message || "Failed to fetch attendance stats",
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAttendanceStats();
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -327,5 +371,3 @@ const SchoolAdminAttendance = () => {
 };
 
 export default SchoolAdminAttendance;
-
-
