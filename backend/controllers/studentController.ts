@@ -3,7 +3,8 @@ import type { Request, Response } from "express";
 import { PrismaPg } from "@prisma/adapter-pg";
 import prismaPkg from "../generated/prisma/client.js";
 
-const PrismaClient = (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
+const PrismaClient =
+  (prismaPkg as any).PrismaClient ?? (prismaPkg as any).default?.PrismaClient;
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const prisma = new PrismaClient({ adapter });
@@ -25,12 +26,13 @@ export const getStudents = async (req: Request, res: Response) => {
 
     const { schoolId: userSchoolId, role } = user;
     const querySchoolId = req.query.schoolId as string | undefined;
-    const effectiveSchoolId = role === "SUPER_ADMIN" ? querySchoolId : userSchoolId;
+    const effectiveSchoolId =
+      role === "SUPER_ADMIN" ? querySchoolId : userSchoolId;
 
     if (!effectiveSchoolId) {
       return res.status(400).json({ message: "schoolId is required" });
     }
-    
+
     const students = await prisma.student.findMany({
       where: {
         isDeleted: false,
@@ -44,6 +46,8 @@ export const getStudents = async (req: Request, res: Response) => {
     res.status(500).json({ message });
   }
 };
+
+
 export const getSpecificStudent = async (
   req: Request<{ id: string }, {}, unknown>,
   res: Response,
@@ -64,10 +68,10 @@ export const getSpecificStudent = async (
     const { schoolId, role } = user;
 
     const student = await prisma.student.findFirst({
-      where: { 
-        id: studentId, 
+      where: {
+        id: studentId,
         isDeleted: false,
-        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
+        ...(role !== "SUPER_ADMIN" ? { schoolId: schoolId as string } : {}),
       },
     });
 
@@ -105,18 +109,20 @@ export const createStudent = async (
     const { role, schoolId: userSchoolId } = user;
 
     // Only School Admins should be allowed to admit students
-    if (role !== 'SCHOOL_ADMIN') {
-      return res.status(403).json({ 
-        message: "Access denied. Only School Admins can admit students." 
+    if (role !== "SCHOOL_ADMIN") {
+      return res.status(403).json({
+        message: "Access denied. Only School Admins can admit students.",
       });
     }
 
     if (!userSchoolId) {
-      return res.status(400).json({ message: "User is not associated with any school." });
+      return res
+        .status(400)
+        .json({ message: "User is not associated with any school." });
     }
 
     const { name, admissionNumber, classId } = parsed.data;
-    
+
     const targetSchoolId = userSchoolId;
 
     const existingStudent = await prisma.student.findFirst({
@@ -136,7 +142,9 @@ export const createStudent = async (
       where: { id: classId, schoolId: targetSchoolId, isDeleted: false },
     });
     if (!existingClass)
-      return res.status(404).json({ message: "Class does not exist in this school" });
+      return res
+        .status(404)
+        .json({ message: "Class does not exist in this school" });
 
     const newStudent = await prisma.student.create({
       data: {
@@ -170,9 +178,10 @@ export const updateStudent = async (
 
     const { role, schoolId: userSchoolId } = user;
 
-    if (role !== 'SCHOOL_ADMIN') {
-      return res.status(403).json({ 
-        message: "Access denied. Only School Admins can update student records." 
+    if (role !== "SCHOOL_ADMIN") {
+      return res.status(403).json({
+        message:
+          "Access denied. Only School Admins can update student records.",
       });
     }
 
@@ -208,10 +217,10 @@ export const updateStudent = async (
     }
 
     const duplicate = await prisma.student.findFirst({
-      where: { 
-        admissionNumber, 
+      where: {
+        admissionNumber,
         schoolId: userSchoolId as string,
-        id: { not: studentId } 
+        id: { not: studentId },
       },
     });
     if (duplicate) {
@@ -221,10 +230,16 @@ export const updateStudent = async (
     }
 
     const existingClass = await prisma.class.findFirst({
-      where: { id: classId, schoolId: userSchoolId as string, isDeleted: false },
+      where: {
+        id: classId,
+        schoolId: userSchoolId as string,
+        isDeleted: false,
+      },
     });
     if (!existingClass)
-      return res.status(404).json({ message: "Class does not exist in your school" });
+      return res
+        .status(404)
+        .json({ message: "Class does not exist in your school" });
 
     const updatedStudent = await prisma.student.update({
       where: {
@@ -259,9 +274,10 @@ export const deleteStudent = async (
 
     const { role, schoolId: userSchoolId } = user;
 
-    if (role !== 'SCHOOL_ADMIN') {
-      return res.status(403).json({ 
-        message: "Access denied. Only School Admins can delete student records." 
+    if (role !== "SCHOOL_ADMIN") {
+      return res.status(403).json({
+        message:
+          "Access denied. Only School Admins can delete student records.",
       });
     }
 
@@ -274,10 +290,10 @@ export const deleteStudent = async (
     const studentId = studentIdParsed.data;
 
     const existingStudent = await prisma.student.findFirst({
-      where: { 
-        id: studentId, 
+      where: {
+        id: studentId,
         schoolId: userSchoolId as string,
-        isDeleted: false 
+        isDeleted: false,
       },
     });
 

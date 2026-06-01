@@ -12,6 +12,7 @@ const teacherClassSubjectSchema = z.object({
   classId: z.string().uuid(),
   subjectId: z.string().uuid(),
 });
+const teacherIdSchema = z.string().uuid();
 
 export const getTCS = async (req: Request, res: Response) => {
   try {
@@ -23,7 +24,7 @@ export const getTCS = async (req: Request, res: Response) => {
     const TCSs = await prisma.teacherClassSubject.findMany({
       where: {
         isDeleted: false,
-        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
+        ...(role !== "SUPER_ADMIN" ? { schoolId: schoolId as string } : {}),
       },
     });
     res.status(200).json(TCSs);
@@ -55,12 +56,14 @@ export const getSpecificTCS = async (
       where: {
         id: TCSId,
         isDeleted: false,
-        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
+        ...(role !== "SUPER_ADMIN" ? { schoolId: schoolId as string } : {}),
       },
     });
 
     if (!TCS) {
-      return res.status(404).json({ message: "TCS does not exist in your school" });
+      return res
+        .status(404)
+        .json({ message: "TCS does not exist in your school" });
     }
 
     res.status(200).json(TCS);
@@ -78,8 +81,12 @@ export const createTCS = async (req: Request, res: Response) => {
 
     const { role, schoolId: userSchoolId } = user;
 
-    if (role !== 'SCHOOL_ADMIN') {
-      return res.status(403).json({ message: "Access denied. Only School Admins can manage TCS records." });
+    if (role !== "SCHOOL_ADMIN") {
+      return res
+        .status(403)
+        .json({
+          message: "Access denied. Only School Admins can manage TCS records.",
+        });
     }
 
     const parsed = teacherClassSubjectSchema.safeParse(req.body);
@@ -177,8 +184,12 @@ export const updateTCS = async (
 
     const { role, schoolId: userSchoolId } = user;
 
-    if (role !== 'SCHOOL_ADMIN') {
-      return res.status(403).json({ message: "Access denied. Only School Admins can update TCS records." });
+    if (role !== "SCHOOL_ADMIN") {
+      return res
+        .status(403)
+        .json({
+          message: "Access denied. Only School Admins can update TCS records.",
+        });
     }
 
     const TCSIdParsed = teacherClassSubjectIdSchema.safeParse(req.params.id);
@@ -207,7 +218,9 @@ export const updateTCS = async (
     });
 
     if (!existingTCS) {
-      return res.status(404).json({ message: "TCS record not found in your school" });
+      return res
+        .status(404)
+        .json({ message: "TCS record not found in your school" });
     }
 
     const updatedTCS = await prisma.teacherClassSubject.update({
@@ -239,8 +252,12 @@ export const deleteTCS = async (
 
     const { role, schoolId: userSchoolId } = user;
 
-    if (role !== 'SCHOOL_ADMIN') {
-      return res.status(403).json({ message: "Access denied. Only School Admins can delete TCS records." });
+    if (role !== "SCHOOL_ADMIN") {
+      return res
+        .status(403)
+        .json({
+          message: "Access denied. Only School Admins can delete TCS records.",
+        });
     }
 
     const TCSIdParsed = teacherClassSubjectIdSchema.safeParse(req.params.id);
@@ -260,7 +277,9 @@ export const deleteTCS = async (
     });
 
     if (!existingTCS) {
-      return res.status(404).json({ message: "TCS record not found in your school" });
+      return res
+        .status(404)
+        .json({ message: "TCS record not found in your school" });
     }
 
     await prisma.teacherClassSubject.update({
@@ -277,6 +296,85 @@ export const deleteTCS = async (
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("Error deleting TCS", message);
+    res.status(500).json({ message });
+  }
+};
+
+export const getAllTeacherStudents = async (
+  req: Request<{ id: string }, {}, unknown>,
+  res: Response,
+) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { role, schoolId: userSchoolId } = user;
+
+    if (role !== "TEACHER") {
+      return res.status(403).json({
+        message: "Access denied. Only Teachers can view their students.",
+      });
+    }
+
+    if (!userSchoolId) {
+      return res
+        .status(400)
+        .json({ message: "User is not associated with any school." });
+    }
+
+    const teacherIdParsed = teacherIdSchema.safeParse(req.params.id);
+
+    if (!teacherIdParsed.success) {
+      return res.status(400).json({ message: "Invalid teacher ID" });
+    }
+
+    const teacherId = teacherIdParsed.data;
+
+    const teacher = await prisma.user.findFirst({
+      where: {
+        id: teacherId,
+        role: "TEACHER",
+      },
+    });
+
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher does not exist" });
+    }
+
+    // const students = await prisma.student.findMany({
+    //   where: {
+    //     teacherId: teacherId,
+    //     isDeleted: false,
+    //   },
+    // });
+
+    const assignments = await prisma.teacherClassSubject.findMany({
+      where: {
+        teacherId: teacherId,
+        isDeleted: false,
+      },
+      select: {
+        classId: true,
+      },
+    });
+
+    const classIds = assignments.map((a) => a.classId);
+
+    const studentsCount = await prisma.student.count({
+      where: {
+        classId: {
+          in: classIds,
+        },
+        isDeleted: false,
+      },
+    });
+
+    res.status(200).json(studentsCount);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown Error";
+    console.error("Error fetching teacher students", message);
     res.status(500).json({ message });
   }
 };

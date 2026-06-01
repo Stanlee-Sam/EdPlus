@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
 import {
@@ -15,13 +15,22 @@ import {
   Users,
 } from "lucide-react";
 import DoughnutChartTeacher from "@/components/Charts/DoughnutChartTeacher";
+import { toast } from "sonner";
+import api from "../../../utils/api";
+import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
+
 
 const TeacherDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(false)
+  const [studentsStats, setStudentsStats] = useState(null)
+  const {user} = useAuth()
+
   const statCards = [
     {
       label: "Students Today",
-      value: "142",
+      value: studentsStats ? studentsStats : 0,
       icon: Users,
       iconClassName: "text-primary",
     },
@@ -134,6 +143,35 @@ const TeacherDashboard = () => {
         "bg-primary-container text-on-primary-container px-2 py-0.5 rounded-full uppercase",
     },
   ];
+
+  useEffect(() => {
+    const fetchStudentsCount = async () => {
+      const token = localStorage.getItem('token')
+      if(!token){
+        toast.error('Invalid token. Please login')
+        return  
+      }
+      const teacherId = user?.userId
+
+
+      setLoading(true)
+      try {
+        const response = await api.get(`tcs/teacher/${teacherId}`,{
+          headers : {
+            Authorization : `Bearer ${token}`
+          }
+        })
+        setStudentsStats(response.data)
+      } catch (error) {
+        if(axios.isAxiosError(error)){
+          toast.error(error.response?.data.message || 'Failed to fetch students count')
+        }
+        
+      }
+      
+    }
+    fetchStudentsCount()
+  }, [])
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
