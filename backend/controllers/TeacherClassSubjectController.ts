@@ -12,7 +12,6 @@ const teacherClassSubjectSchema = z.object({
   classId: z.string().uuid(),
   subjectId: z.string().uuid(),
 });
-const teacherIdSchema = z.string().uuid();
 
 export const getTCS = async (req: Request, res: Response) => {
   try {
@@ -82,11 +81,9 @@ export const createTCS = async (req: Request, res: Response) => {
     const { role, schoolId: userSchoolId } = user;
 
     if (role !== "SCHOOL_ADMIN") {
-      return res
-        .status(403)
-        .json({
-          message: "Access denied. Only School Admins can manage TCS records.",
-        });
+      return res.status(403).json({
+        message: "Access denied. Only School Admins can manage TCS records.",
+      });
     }
 
     const parsed = teacherClassSubjectSchema.safeParse(req.body);
@@ -185,11 +182,9 @@ export const updateTCS = async (
     const { role, schoolId: userSchoolId } = user;
 
     if (role !== "SCHOOL_ADMIN") {
-      return res
-        .status(403)
-        .json({
-          message: "Access denied. Only School Admins can update TCS records.",
-        });
+      return res.status(403).json({
+        message: "Access denied. Only School Admins can update TCS records.",
+      });
     }
 
     const TCSIdParsed = teacherClassSubjectIdSchema.safeParse(req.params.id);
@@ -253,11 +248,9 @@ export const deleteTCS = async (
     const { role, schoolId: userSchoolId } = user;
 
     if (role !== "SCHOOL_ADMIN") {
-      return res
-        .status(403)
-        .json({
-          message: "Access denied. Only School Admins can delete TCS records.",
-        });
+      return res.status(403).json({
+        message: "Access denied. Only School Admins can delete TCS records.",
+      });
     }
 
     const TCSIdParsed = teacherClassSubjectIdSchema.safeParse(req.params.id);
@@ -301,7 +294,7 @@ export const deleteTCS = async (
 };
 
 export const getAllTeacherStudents = async (
-  req: Request<{ id: string }, {}, unknown>,
+  req: Request,
   res: Response,
 ) => {
   try {
@@ -310,7 +303,7 @@ export const getAllTeacherStudents = async (
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { role, schoolId: userSchoolId } = user;
+    const { role, schoolId: userSchoolId, userId: teacherId } = user;
 
     if (role !== "TEACHER") {
       return res.status(403).json({
@@ -324,18 +317,11 @@ export const getAllTeacherStudents = async (
         .json({ message: "User is not associated with any school." });
     }
 
-    const teacherIdParsed = teacherIdSchema.safeParse(req.params.id);
-
-    if (!teacherIdParsed.success) {
-      return res.status(400).json({ message: "Invalid teacher ID" });
-    }
-
-    const teacherId = teacherIdParsed.data;
-
     const teacher = await prisma.user.findFirst({
       where: {
         id: teacherId,
         role: "TEACHER",
+        schoolId: userSchoolId as string,
       },
     });
 
@@ -343,16 +329,10 @@ export const getAllTeacherStudents = async (
       return res.status(404).json({ message: "Teacher does not exist" });
     }
 
-    // const students = await prisma.student.findMany({
-    //   where: {
-    //     teacherId: teacherId,
-    //     isDeleted: false,
-    //   },
-    // });
-
     const assignments = await prisma.teacherClassSubject.findMany({
       where: {
-        teacherId: teacherId,
+        teacherId,
+        schoolId: userSchoolId as string,
         isDeleted: false,
       },
       select: {
@@ -360,7 +340,21 @@ export const getAllTeacherStudents = async (
       },
     });
 
-    const classIds = assignments.map((a) => a.classId);
+    const classTeacherClasses = await prisma.class.findMany({
+      where: {
+        classTeacherId: teacherId,
+        schoolId: userSchoolId as string,
+        isDeleted: false,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const classIds = [...new Set([
+      ...assignments.map((a) => a.classId),
+      ...classTeacherClasses.map((classRecord) => classRecord.id),
+    ])];
 
     const studentsCount = await prisma.student.count({
       where: {
@@ -375,6 +369,77 @@ export const getAllTeacherStudents = async (
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown Error";
     console.error("Error fetching teacher students", message);
+    res.status(500).json({ message });
+  }
+};
+
+export const getAllTeacherClasses = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { role, schoolId: userSchoolId, userId: teacherId } = user;
+
+    if (role !== "TEACHER") {
+      return res.status(403).json({
+        message: "Access denied. Only Teachers can view their students.",
+      });
+    }
+
+    if (!userSchoolId) {
+      return res
+        .status(400)
+        .json({ message: "User is not associated with any school." });
+    }
+
+    const teacher = await prisma.user.findFirst({
+      where: {
+        id: teacherId,
+        role: "TEACHER",
+        schoolId: userSchoolId as string,
+      },
+    });
+
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher does not exist" });
+    }
+
+    const classTeacherClasses = await prisma.class.findMany({
+      where: {
+        classTeacherId: teacherId,
+        schoolId: userSchoolId as string,
+        isDeleted: false,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const assignments = await prisma.teacherClassSubject.findMany({
+      where: {
+        teacherId,
+        schoolId: userSchoolId as string,
+        isDeleted: false,
+      },
+      select: {
+        classId: true,
+      },
+    });
+
+    const classIds = new Set<string>([
+      ...assignments.map((assignment) => assignment.classId),
+      ...classTeacherClasses.map((classRecord) => classRecord.id),
+    ]);
+
+    res.status(200).json(classIds.size);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown Error";
+    console.error("Error fetching teacher classes", message);
     res.status(500).json({ message });
   }
 };

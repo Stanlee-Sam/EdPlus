@@ -8,12 +8,17 @@ import {
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const DoughnutChartTeacher = () => {
+type DoughnutChartTeacherProps = {
+  present: number;
+  absent: number;
+};
+
+const DoughnutChartTeacher = ({ present, absent }: DoughnutChartTeacherProps) => {
   const data = {
     labels: ["Present", "Absent/Late"],
     datasets: [
       {
-        data: [129, 13],
+        data: [present, absent],
         backgroundColor: ["#0ea5e9", "#134e4a"],
         borderWidth: 0,
       },

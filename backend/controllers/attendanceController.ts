@@ -351,7 +351,7 @@ export const getAttendancePercentage = async (req : Request, res : Response) => 
     const user = req.user;
     if (!user) return res.status(401).json({ message: "Unauthorized" });
 
-    const { schoolId, role } = user;
+    const { schoolId, role, userId } = user;
     const parsedQuery = attendanceStatsQuerySchema.safeParse(req.query);
     if (!parsedQuery.success) {
       return res.status(400).json({
@@ -378,9 +378,62 @@ export const getAttendancePercentage = async (req : Request, res : Response) => 
       },
     };
 
+    let teacherStudentRelationFilter: { is: { classId: { in: string[] } } } | null = null;
+
+    if (role === "TEACHER") {
+      const assignedClasses = await prisma.teacherClassSubject.findMany({
+        where: {
+          teacherId: userId,
+          schoolId: schoolId as string,
+          isDeleted: false,
+        },
+        select: {
+          classId: true,
+        },
+      });
+
+      const classTeacherClasses = await prisma.class.findMany({
+        where: {
+          classTeacherId: userId,
+          schoolId: schoolId as string,
+          isDeleted: false,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const classIds = [...new Set([
+        ...assignedClasses.map((assignment) => assignment.classId),
+        ...classTeacherClasses.map((classRecord) => classRecord.id),
+      ])];
+
+      if (classIds.length === 0) {
+        return res.status(200).json({
+          presentStudents: 0,
+          absentStudents: 0,
+          totalRecords: 0,
+          attendancePercentage: 0,
+        });
+      }
+
+      teacherStudentRelationFilter = {
+        is: {
+          classId: {
+            in: classIds,
+          },
+        },
+      };
+    }
+
     const presentStudents = await prisma.attendance.count({
       where : {
         ...baseWhere,
+        ...(role === "TEACHER" && teacherStudentRelationFilter
+          ? {
+              student: teacherStudentRelationFilter,
+            }
+          : {}),
         status : {
           in : ['present', 'late']
         },
@@ -390,6 +443,11 @@ export const getAttendancePercentage = async (req : Request, res : Response) => 
     const absentStudents = await prisma.attendance.count({
       where: {
         ...baseWhere,
+        ...(role === "TEACHER" && teacherStudentRelationFilter
+          ? {
+              student: teacherStudentRelationFilter,
+            }
+          : {}),
         status: "absent",
       },
     });

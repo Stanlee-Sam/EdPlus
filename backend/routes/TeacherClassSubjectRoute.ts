@@ -5,7 +5,8 @@ import {
   createTCS,
   updateTCS,
   deleteTCS,
-  getAllTeacherStudents
+  getAllTeacherStudents,
+  getAllTeacherClasses
 } from "../controllers/TeacherClassSubjectController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { authorizeRole } from "../middleware/roleMiddleware.js";
@@ -13,10 +14,11 @@ import { authorizeRole } from "../middleware/roleMiddleware.js";
 const router = express.Router();
 
 router.get("/", authenticateToken, getTCS);
-router.get("/:id", authenticateToken, getSpecificTCS);
 router.post("/", authenticateToken, createTCS);
+router.get('/teacher-students-count', authenticateToken, authorizeRole(['TEACHER']), getAllTeacherStudents);
+router.get('/teacher-classes-count', authenticateToken, authorizeRole(['TEACHER']), getAllTeacherClasses);
+router.get("/:id", authenticateToken, getSpecificTCS);
 router.put("/:id", authenticateToken, updateTCS);
 router.delete("/:id", authenticateToken, deleteTCS);
-router.get('/teacher/:id', authenticateToken, authorizeRole(['TEACHER']), getAllTeacherStudents)
 
 export default router;

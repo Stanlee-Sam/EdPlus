@@ -20,35 +20,44 @@ import api from "../../../utils/api";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 
+type AttendanceStats = {
+  presentStudents: number;
+  absentStudents: number;
+  totalRecords: number;
+  attendancePercentage: number;
+};
 
 const TeacherDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(false)
-  const [studentsStats, setStudentsStats] = useState(null)
-  const {user} = useAuth()
+  const [loading, setLoading] = useState(false);
+  const [studentsStats, setStudentsStats] = useState<number>(0);
+  const [classesStats, setClassesStats] = useState<number>(0);
+  const [assignmentStats, setAssignmentStats] = useState<number>(0);
+  const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null);
+  const { user } = useAuth();
 
   const statCards = [
     {
       label: "Students Today",
-      value: studentsStats ? studentsStats : 0,
+      value: studentsStats,
       icon: Users,
       iconClassName: "text-primary",
     },
     {
       label: "Classes Active",
-      value: "6",
+      value: classesStats,
       icon: Calendar,
       iconClassName: "text-tertiary",
     },
     {
       label: "Assignments to Grade",
-      value: "24",
+      value: assignmentStats,
       icon: ClipboardClock,
       iconClassName: "text-error",
     },
     {
       label: "Overall Attendance",
-      value: "94.2%",
+      value: attendanceStats ? `${attendanceStats.attendancePercentage}%` : "--",
       icon: ChartColumn,
       iconClassName: "text-on-primary-container",
     },
@@ -146,32 +155,112 @@ const TeacherDashboard = () => {
 
   useEffect(() => {
     const fetchStudentsCount = async () => {
-      const token = localStorage.getItem('token')
-      if(!token){
-        toast.error('Invalid token. Please login')
-        return  
+      const token = localStorage.getItem("token");
+      if (!token || !user?.userId) {
+        toast.error("Invalid token. Please login");
+        return;
       }
-      const teacherId = user?.userId
 
-
-      setLoading(true)
+      setLoading(true);
       try {
-        const response = await api.get(`tcs/teacher/${teacherId}`,{
-          headers : {
-            Authorization : `Bearer ${token}`
-          }
-        })
-        setStudentsStats(response.data)
+        const response = await api.get(`/tcs/teacher-students-count`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setStudentsStats(response.data);
       } catch (error) {
-        if(axios.isAxiosError(error)){
-          toast.error(error.response?.data.message || 'Failed to fetch students count')
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data.message || "Failed to fetch students count");
         }
-        
+      } finally {
+        setLoading(false);
       }
-      
-    }
-    fetchStudentsCount()
-  }, [])
+    };
+    fetchStudentsCount();
+  }, [user?.userId]);
+
+  useEffect(() => {
+    const fetchClassesCount = async () => {
+      const token = localStorage.getItem("token");
+      if (!token || !user?.userId) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/tcs/teacher-classes-count`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setClassesStats(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data.message || "Failed to fetch classes count");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClassesCount();
+  }, [user?.userId]);
+
+  useEffect(() => {
+    const getAssignmentsToGrade = async () => {
+      const token = localStorage.getItem("token");
+      if (!token || !user?.userId) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/homework/assignments-to-grade-count`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setAssignmentStats(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data.message || "Failed to fetch assignments count");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    getAssignmentsToGrade();
+  }, [user?.userId]);
+
+  useEffect(() => {
+    const fetchAttendanceStats = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get<AttendanceStats>(`/attendance/stats`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setAttendanceStats(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data.message || "Failed to fetch attendance stats");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAttendanceStats();
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -318,10 +407,13 @@ const TeacherDashboard = () => {
                     Daily Attendance
                   </h3>
                   <div className="relative w-40 h-40 mx-auto mb-8">
-                    <DoughnutChartTeacher />
+                    <DoughnutChartTeacher
+                      present={attendanceStats?.presentStudents ?? 0}
+                      absent={attendanceStats?.absentStudents ?? 0}
+                    />
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-2xl font-black text-on-surface">
-                        91%
+                        {attendanceStats ? `${attendanceStats.attendancePercentage}%` : "--"}
                       </span>
                       <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                         Present
@@ -334,14 +426,18 @@ const TeacherDashboard = () => {
                         <div className="w-2 h-2 rounded-full bg-primary"></div>
                         <span className="text-on-surface-variant">Present</span>
                       </div>
-                      <span className="font-bold">129</span>
+                      <span className="font-bold">
+                        {attendanceStats ? attendanceStats.presentStudents : "--"}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-on-tertiary-container"></div>
                         <span className="text-on-surface-variant">Absent</span>
                       </div>
-                      <span className="font-bold">13</span>
+                      <span className="font-bold">
+                        {attendanceStats ? attendanceStats.absentStudents : "--"}
+                      </span>
                     </div>
                   </div>
                 </div>

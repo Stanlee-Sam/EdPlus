@@ -331,3 +331,46 @@ export const deleteHomework = async (
     res.status(500).json({ message });
   }
 };
+
+export const getAssignmentsToGradeCount = async (req: Request, res: Response) => {
+  try{
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { role, schoolId: userSchoolId, userId: teacherId } = user;
+
+    if (role !== "TEACHER") {
+      return res.status(403).json({
+        message: "Access denied. Only Teachers can view their students.",
+      });
+    }
+
+    if (!userSchoolId) {
+      return res
+        .status(400)
+        .json({ message: "User is not associated with any school." });
+    }
+
+    const pendingAssignmentsToGrade = await prisma.homeworkSubmission.count({
+      where : {
+        status : 'complete',
+        markedAt : null,
+        isDeleted : false,
+        homework : {
+          teacherId,
+          schoolId: userSchoolId as string,
+          isDeleted : false
+        }
+      }
+    })
+
+    res.status(200).json(pendingAssignmentsToGrade)
+
+  }catch(error){
+    const message = error instanceof Error ? error.message : "Uknown error";
+    console.log("Error getting assignments to grade count", message);
+    res.status(500).json({ message });
+  }
+}
