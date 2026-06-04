@@ -6,7 +6,8 @@ import {
   updateTCS,
   deleteTCS,
   getAllTeacherStudents,
-  getAllTeacherClasses
+  getAllTeacherClasses,
+  getTeacherStudentsList
 } from "../controllers/TeacherClassSubjectController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { authorizeRole } from "../middleware/roleMiddleware.js";
@@ -17,6 +18,7 @@ router.get("/", authenticateToken, getTCS);
 router.post("/", authenticateToken, createTCS);
 router.get('/teacher-students-count', authenticateToken, authorizeRole(['TEACHER']), getAllTeacherStudents);
 router.get('/teacher-classes-count', authenticateToken, authorizeRole(['TEACHER']), getAllTeacherClasses);
+router.get('/teacher-students-list', authenticateToken, authorizeRole(['TEACHER']), getTeacherStudentsList);
 router.get("/:id", authenticateToken, getSpecificTCS);
 router.put("/:id", authenticateToken, updateTCS);
 router.delete("/:id", authenticateToken, deleteTCS);

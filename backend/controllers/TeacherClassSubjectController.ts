@@ -293,10 +293,7 @@ export const deleteTCS = async (
   }
 };
 
-export const getAllTeacherStudents = async (
-  req: Request,
-  res: Response,
-) => {
+export const getAllTeacherStudents = async (req: Request, res: Response) => {
   try {
     const user = req.user;
     if (!user) {
@@ -351,10 +348,12 @@ export const getAllTeacherStudents = async (
       },
     });
 
-    const classIds = [...new Set([
-      ...assignments.map((a) => a.classId),
-      ...classTeacherClasses.map((classRecord) => classRecord.id),
-    ])];
+    const classIds = [
+      ...new Set([
+        ...assignments.map((a) => a.classId),
+        ...classTeacherClasses.map((classRecord) => classRecord.id),
+      ]),
+    ];
 
     const studentsCount = await prisma.student.count({
       where: {
@@ -373,10 +372,7 @@ export const getAllTeacherStudents = async (
   }
 };
 
-export const getAllTeacherClasses = async (
-  req: Request,
-  res: Response,
-) => {
+export const getAllTeacherClasses = async (req: Request, res: Response) => {
   try {
     const user = req.user;
     if (!user) {
@@ -440,6 +436,101 @@ export const getAllTeacherClasses = async (
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown Error";
     console.error("Error fetching teacher classes", message);
+    res.status(500).json({ message });
+  }
+};
+
+export const getTeacherStudentsList =async (req: Request, res: Response) => {
+  try {
+     const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { role, schoolId: userSchoolId, userId: teacherId } = user;
+    const {classId, termId} = req.query;
+
+    if (role !== "TEACHER") {
+      return res.status(403).json({
+        message: "Access denied. Only Teachers can view their students.",
+      });
+    }
+
+    if (!userSchoolId) {
+      return res
+        .status(400)
+        .json({ message: "User is not associated with any school." });
+    }
+
+     const teacher = await prisma.user.findFirst({
+      where: {
+        id: teacherId,
+        role: "TEACHER",
+        schoolId: userSchoolId as string,
+      },
+    });
+
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher does not exist" });
+    }
+
+    const assignments = await prisma.teacherClassSubject.findMany({
+      where: { teacherId, isDeleted: false },
+      select: { classId: true }
+    });
+    
+    const classTeacherClasses = await prisma.class.findMany({
+      where: { classTeacherId: teacherId, isDeleted: false },
+      select: { id: true }
+    });
+
+    const allowedClassIds = [...new Set([
+      ...assignments.map(a => a.classId),
+      ...classTeacherClasses.map(c => c.id)
+    ])];
+
+    const students = await prisma.student.findMany({
+      where: {
+        schoolId: userSchoolId as string,
+        isDeleted: false,
+        // Apply filter if classId is provided, otherwise show all teacher's classes
+        classId: classId ? (classId as string) : { in: allowedClassIds },
+      },
+      include: {
+        class: { select: { name: true } },
+        // Get attendance for the specific term
+        attendance: {
+          where: { termId: termId as string, isDeleted: false }
+        },
+        // Get results for the specific term
+        results: {
+          where: { termId: termId as string, isDeleted: false },
+          select: { score: true, grade: true }
+        }
+      }
+    });
+
+    const formattedStudents = students.map(student => {
+      const totalDays = student.attendance.length;
+      const presentDays = student.attendance.filter(a => a.status === 'present' || a.status === 'late').length;
+      
+      return {
+        id: student.id,
+        admissionNumber: student.admissionNumber,
+        name: student.name,
+        className: student.class.name,
+        // Calculate Attendance %
+        attendancePercentage: totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : "N/A",
+        grade: student.results[0]?.grade || "N/A",
+        score: student.results[0]?.score || 0
+      };
+    });
+
+    res.status(200).json(formattedStudents);
+
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Uknown Error";
+    console.error("Error fetching students list", message);
     res.status(500).json({ message });
   }
 };
