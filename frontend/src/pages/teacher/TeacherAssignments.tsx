@@ -43,6 +43,8 @@ interface Assignment {
   createdAt?: string;
 }
 
+type AssignmentModalMode = "view" | "edit";
+
 const TeacherAssignments = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -58,35 +60,37 @@ const TeacherAssignments = () => {
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedTerm, setSelectedTerm] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+  const [assignmentModalMode, setAssignmentModalMode] = useState<AssignmentModalMode>("view");
+
+  const fetchAssignments = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || !user?.userId) {
+      toast.error("Invalid token. Please login");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await api.get(`/homework`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setAssignments(Array.isArray(response.data) ? response.data : response.data?.homework ?? []);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data.message || "Failed to fetch assignments");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchAssignmentCount = async () => {
-      const token = localStorage.getItem("token");
-      if (!token || !user?.userId) {
-        toast.error("Invalid token. Please login");
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const response = await api.get(`/homework`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setAssignments(response.data);
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          toast.error(
-            error.response?.data.message || "Failed to fetch assignments",
-          );
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAssignmentCount();
-  }, []);
+    fetchAssignments();
+  }, [user?.userId]);
 
   useEffect(() => {
     const getGradedAssignments = async () => {
@@ -220,7 +224,7 @@ const TeacherAssignments = () => {
         },
       );
 
-      setAssignments((assignmentList) => [response.data, ...assignmentList]);
+      await fetchAssignments();
       setTitle("");
       setDescription("");
       setSelectedClass("");
@@ -258,6 +262,76 @@ const TeacherAssignments = () => {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const openAssignmentModal = (assignment: Assignment, mode: AssignmentModalMode) => {
+    setSelectedAssignment(assignment);
+    setAssignmentModalMode(mode);
+    setTitle(assignment.title);
+    setDescription(assignment.description);
+    setSelectedClass(assignment.classId);
+    setSelectedSubject(assignment.subjectId);
+    setSelectedTerm(assignment.termId);
+    setDueDate(assignment.dueDate.slice(0, 10));
+    setIsAssignmentModalOpen(true);
+  };
+
+  const closeAssignmentModal = () => {
+    setIsAssignmentModalOpen(false);
+    setSelectedAssignment(null);
+    setAssignmentModalMode("view");
+    setTitle("");
+    setDescription("");
+    setSelectedClass("");
+    setSelectedSubject("");
+    setSelectedTerm("");
+    setDueDate("");
+  };
+
+  const handleUpdateAssignment = async () => {
+    if (!selectedAssignment) return;
+    const token = localStorage.getItem("token");
+    if (!token || !user?.userId) {
+      toast.error("Invalid token. Please login");
+      return;
+    }
+
+    if (!title || !description || !selectedClass || !selectedSubject || !selectedTerm || !dueDate) {
+      toast.error("Please fill in all assignment fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await api.put(
+        `/homework/${selectedAssignment.id}`,
+        {
+          title,
+          description,
+          classId: selectedClass,
+          subjectId: selectedSubject,
+          termId: selectedTerm,
+          dueDate,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      toast.success("Assignment updated successfully");
+      await fetchAssignments();
+      closeAssignmentModal();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data.message || "Failed to update assignment");
+      } else {
+        toast.error("Failed to update assignment");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -514,18 +588,34 @@ const TeacherAssignments = () => {
                       </p>
                     </div>
                     <div className="flex items-center justify-between gap-3 sm:hidden">
-                      <button className="flex-1 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-on-surface-variant transition-all hover:bg-primary hover:text-white">
+                      <button
+                        type="button"
+                        onClick={() => openAssignmentModal(assignment, "edit")}
+                        className="flex-1 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-on-surface-variant transition-all hover:bg-primary hover:text-white"
+                      >
                         Edit
                       </button>
-                      <button className="flex-1 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-on-surface-variant transition-all hover:bg-tertiary hover:text-white">
+                      <button
+                        type="button"
+                        onClick={() => openAssignmentModal(assignment, "view")}
+                        className="flex-1 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-on-surface-variant transition-all hover:bg-tertiary hover:text-white"
+                      >
                         View
                       </button>
                     </div>
                     <div className="hidden items-center gap-2 sm:flex">
-                      <button className="rounded-2xl bg-secondary p-3 text-on-surface-variant transition-all hover:bg-primary hover:text-white">
+                      <button
+                        type="button"
+                        onClick={() => openAssignmentModal(assignment, "edit")}
+                        className="rounded-2xl bg-secondary p-3 text-on-surface-variant transition-all hover:bg-primary hover:text-white"
+                      >
                         <Edit className="material-symbols-outlined" data-icon="edit" />
                       </button>
-                      <button className="rounded-2xl bg-secondary p-3 text-on-surface-variant transition-all hover:bg-tertiary hover:text-white">
+                      <button
+                        type="button"
+                        onClick={() => openAssignmentModal(assignment, "view")}
+                        className="rounded-2xl bg-secondary p-3 text-on-surface-variant transition-all hover:bg-tertiary hover:text-white"
+                      >
                         <Eye className="material-symbols-outlined" data-icon="visibility" />
                       </button>
                     </div>
@@ -533,6 +623,140 @@ const TeacherAssignments = () => {
                 ))
               )}
             </div>
+
+            {isAssignmentModalOpen && selectedAssignment ? (
+              <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 px-4">
+                <div className="w-full max-w-2xl rounded-2xl bg-card p-6 shadow-[0_20px_40px_rgba(42,53,50,0.2)]">
+                  <div className="mb-5 flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-on-surface">
+                        {assignmentModalMode === "edit" ? "Edit Assignment" : "Assignment Details"}
+                      </h3>
+                      <p className="text-sm text-on-surface-variant">
+                        {assignmentModalMode === "edit"
+                          ? "Update the homework and save your changes."
+                          : "Quick summary of the selected assignment."}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={closeAssignmentModal}
+                      className="rounded-full bg-secondary px-3 py-2 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-highest"
+                    >
+                      Close
+                    </button>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="md:col-span-2">
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                        Title
+                      </label>
+                      <input
+                        className="w-full rounded-md border-none bg-secondary px-4 py-3 focus:ring-2 focus:ring-primary/20"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        disabled={assignmentModalMode === "view"}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                        Description
+                      </label>
+                      <textarea
+                        className="min-h-28 w-full resize-none rounded-md border-none bg-secondary px-4 py-3 focus:ring-2 focus:ring-primary/20"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        disabled={assignmentModalMode === "view"}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                        Class
+                      </label>
+                      <select
+                        className="w-full rounded-md border-none bg-secondary px-4 py-3 focus:ring-2 focus:ring-primary/20"
+                        value={selectedClass}
+                        onChange={(e) => setSelectedClass(e.target.value)}
+                        disabled={assignmentModalMode === "view"}
+                      >
+                        {classes.map((classItem) => (
+                          <option key={classItem.id} value={classItem.id}>
+                            {classItem.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                        Subject
+                      </label>
+                      <select
+                        className="w-full rounded-md border-none bg-secondary px-4 py-3 focus:ring-2 focus:ring-primary/20"
+                        value={selectedSubject}
+                        onChange={(e) => setSelectedSubject(e.target.value)}
+                        disabled={assignmentModalMode === "view"}
+                      >
+                        {subjects.map((subject) => (
+                          <option key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                        Term
+                      </label>
+                      <select
+                        className="w-full rounded-md border-none bg-secondary px-4 py-3 focus:ring-2 focus:ring-primary/20"
+                        value={selectedTerm}
+                        onChange={(e) => setSelectedTerm(e.target.value)}
+                        disabled={assignmentModalMode === "view"}
+                      >
+                        {terms.map((term) => (
+                          <option key={term.id} value={term.id}>
+                            {term.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+                        Due Date
+                      </label>
+                      <input
+                        type="date"
+                        className="w-full rounded-md border-none bg-secondary px-4 py-3 focus:ring-2 focus:ring-primary/20"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        disabled={assignmentModalMode === "view"}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={closeAssignmentModal}
+                      className="rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-on-surface-variant transition-colors hover:bg-surface-container-highest"
+                    >
+                      {assignmentModalMode === "view" ? "Done" : "Cancel"}
+                    </button>
+                    {assignmentModalMode === "edit" ? (
+                      <button
+                        type="button"
+                        onClick={handleUpdateAssignment}
+                        className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary/90"
+                      >
+                        {loading ? "Saving..." : "Save Changes"}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-16 grid grid-cols-12 gap-8 items-start">
               <div className="col-span-12 lg:col-span-5 relative overflow-hidden rounded-[3rem] h-[400px]">
                 <img

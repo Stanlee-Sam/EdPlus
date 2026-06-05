@@ -53,7 +53,11 @@ export const getHomework = async (req: Request, res: Response) => {
     const homework = await prisma.homework.findMany({
       where: {
         isDeleted: false,
-        ...(role !== 'TEACHER' ? { schoolId: userSchoolId as string } : {}),
+        schoolId: userSchoolId as string,
+        ...(role === "TEACHER" ? { teacherId } : {}),
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     });
     res.status(200).json(homework);
