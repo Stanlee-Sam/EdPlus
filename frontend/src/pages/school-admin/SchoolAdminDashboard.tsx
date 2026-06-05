@@ -69,7 +69,7 @@ const SchoolAdminDashboard = () => {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [isSchoolModalOpen, setIsSchoolModalOpen] = useState(false);
-  const [schoolModalType, setSchoolModalType] = useState<"level" | "subject" | "class">("level");
+  const [schoolModalType, setSchoolModalType] = useState<"level" | "subject" | "class" | "term">("level");
   const [createRole, setCreateRole] = useState<"teacher" | "parent">("teacher");
   const [formData, setFormData] = useState({
     name: "",
@@ -92,6 +92,8 @@ const SchoolAdminDashboard = () => {
     order: "",
     classTeacherId: "",
     levelId: "",
+    startDate: "",
+    endDate: "",
   });
 
   const fetchStudents = async (token: string) => {
@@ -382,7 +384,7 @@ const SchoolAdminDashboard = () => {
     });
   };
 
-  const openSchoolModal = async (type: "level" | "subject" | "class") => {
+  const openSchoolModal = async (type: "level" | "subject" | "class" | "term") => {
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("Invalid token. Please login");
@@ -409,6 +411,8 @@ const SchoolAdminDashboard = () => {
       order: "",
       classTeacherId: "",
       levelId: "",
+      startDate: "",
+      endDate: "",
     });
     setIsSchoolModalOpen(true);
   };
@@ -420,6 +424,8 @@ const SchoolAdminDashboard = () => {
       order: "",
       classTeacherId: "",
       levelId: "",
+      startDate: "",
+      endDate: "",
     });
   };
 
@@ -608,6 +614,23 @@ const SchoolAdminDashboard = () => {
         toast.success("Class created successfully");
       }
 
+      if (schoolModalType === "term") {
+        if (!schoolFormData.startDate || !schoolFormData.endDate) {
+          toast.error("Please select both start and end dates");
+          return;
+        }
+        await api.post(
+          "/terms",
+          {
+            name: schoolFormData.name,
+            startDate: schoolFormData.startDate,
+            endDate: schoolFormData.endDate,
+          },
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        toast.success("Term created successfully");
+      }
+
       closeSchoolModal();
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -715,6 +738,13 @@ const SchoolAdminDashboard = () => {
                   className="bg-accent text-on-surface px-4 py-2 rounded-md font-semibold text-sm hover:opacity-80 transition-colors cursor-pointer"
                 >
                   Add Class
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openSchoolModal("term")}
+                  className="bg-secondary text-on-surface px-4 py-2 rounded-md font-semibold text-sm hover:opacity-80 transition-colors cursor-pointer"
+                >
+                  Add Term
                 </button>
               </div>
             </section>
@@ -1278,11 +1308,13 @@ const SchoolAdminDashboard = () => {
             <div className="flex items-start justify-between mb-5">
               <div>
                 <h4 className="text-2xl font-bold text-on-surface">
-                  Add {schoolModalType === "level" ? "Level" : schoolModalType === "subject" ? "Subject" : "Class"}
+                  Add {schoolModalType === "level" ? "Level" : schoolModalType === "subject" ? "Subject" : schoolModalType === "class" ? "Class" : "Term"}
                 </h4>
                 <p className="text-sm text-on-surface-variant mt-1">
                   {schoolModalType === "class"
                     ? "Create a class and assign a class teacher with level."
+                    : schoolModalType === "term"
+                      ? "Create a new academic term for your school."
                     : `Create a new ${schoolModalType} for your school.`}
                 </p>
               </div>
@@ -1302,7 +1334,7 @@ const SchoolAdminDashboard = () => {
                   value={schoolFormData.name}
                   onChange={(event) => setSchoolFormData((prev) => ({ ...prev, name: event.target.value }))}
                   className="w-full p-3 rounded-sm border border-input bg-input outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
-                  placeholder={schoolModalType === "level" ? "Grade 7" : schoolModalType === "subject" ? "Mathematics" : "Grade 7 East"}
+                  placeholder={schoolModalType === "level" ? "Grade 7" : schoolModalType === "subject" ? "Mathematics" : schoolModalType === "class" ? "Grade 7 East" : "Semester 1"}
                 />
               </div>
               {schoolModalType === "level" ? (
@@ -1315,6 +1347,28 @@ const SchoolAdminDashboard = () => {
                     className="w-full p-3 rounded-sm border border-input bg-input outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
                     placeholder="1"
                   />
+                </div>
+              ) : null}
+              {schoolModalType === "term" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">Start Date</label>
+                    <input
+                      type="date"
+                      value={schoolFormData.startDate}
+                      onChange={(event) => setSchoolFormData((prev) => ({ ...prev, startDate: event.target.value }))}
+                      className="w-full p-3 rounded-sm border border-input bg-input outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">End Date</label>
+                    <input
+                      type="date"
+                      value={schoolFormData.endDate}
+                      onChange={(event) => setSchoolFormData((prev) => ({ ...prev, endDate: event.target.value }))}
+                      className="w-full p-3 rounded-sm border border-input bg-input outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+                    />
+                  </div>
                 </div>
               ) : null}
               {schoolModalType === "class" ? (

@@ -30,15 +30,30 @@ const parentHomeworkSchema = z.object({
 
 export const getHomework = async (req: Request, res: Response) => {
   try {
-    const user = req.user;
-    if (!user) return res.status(401).json({ message: "Unauthorized" });
+   const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
-    const { schoolId, role } = user;
+    const { role, schoolId: userSchoolId, userId: teacherId } = user;
+
+    if (role !== "TEACHER") {
+      return res.status(403).json({
+        message: "Access denied. Only Teachers can view their students.",
+      });
+    }
+
+    if (!userSchoolId) {
+      return res
+        .status(400)
+        .json({ message: "User is not associated with any school." });
+    }
+
 
     const homework = await prisma.homework.findMany({
       where: {
         isDeleted: false,
-        ...(role !== 'SUPER_ADMIN' ? { schoolId: schoolId as string } : {}),
+        ...(role !== 'TEACHER' ? { schoolId: userSchoolId as string } : {}),
       },
     });
     res.status(200).json(homework);
@@ -372,5 +387,58 @@ export const getAssignmentsToGradeCount = async (req: Request, res: Response) =>
     const message = error instanceof Error ? error.message : "Uknown error";
     console.log("Error getting assignments to grade count", message);
     res.status(500).json({ message });
+  }
+}
+
+export const getGradedAssignmens = async (req : Request, res : Response) => {
+  try {
+     const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { role, schoolId: userSchoolId, userId: teacherId } = user;
+
+    if (role !== "TEACHER") {
+      return res.status(403).json({
+        message: "Access denied. Only Teachers can view their students.",
+      });
+    }
+
+    if (!userSchoolId) {
+      return res
+        .status(400)
+        .json({ message: "User is not associated with any school." });
+    }
+
+    const gradedAssignments = await prisma.homeworkSubmission.findMany({
+      where : {
+        status : 'complete',
+        markedAt : {
+          not : null
+        },
+        isDeleted : false,
+        homework : {
+          teacherId,
+          schoolId: userSchoolId as string,
+          isDeleted : false
+        }
+      },
+      include : {
+        student : {
+          select : {
+           name : true
+          }
+        }
+      }
+    })
+
+    res.status(200).json(gradedAssignments)
+
+    
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Uknown error";
+    console.log('Error getting graded assignments', message);
+    res.status(500).json({message})
   }
 }

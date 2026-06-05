@@ -1,9 +1,264 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
-import { ArrowDownWideNarrow, CheckCheck, ClipboardClock, Edit, Eye, ListFilter, Rocket, Star } from "lucide-react";
+import {
+  ArrowDownWideNarrow,
+  CheckCheck,
+  ClipboardClock,
+  Edit,
+  Eye,
+  ListFilter,
+  Rocket,
+  Star,
+} from "lucide-react";
+import { toast } from "sonner";
+import axios from "axios";
+import api from "../../../utils/api";
+import { useAuth } from "@/context/AuthContext";
+import { ClipLoader } from "react-spinners";
+
+type ClassOption = {
+  id: string;
+  name: string;
+};
+
+type SubjectOption = {
+  id: string;
+  name: string;
+};
+
+type TermOption = {
+  id: string;
+  name: string;
+};
+
+interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  classId: string;
+  subjectId: string;
+  termId: string;
+  createdAt?: string;
+}
+
 const TeacherAssignments = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [gradedAssignments, setGradedAssignments] = useState([]);
+  const [classes, setClasses] = useState<ClassOption[]>([]);
+  const [subjects, setSubjects] = useState<SubjectOption[]>([]);
+  const [terms, setTerms] = useState<TermOption[]>([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedTerm, setSelectedTerm] = useState("");
+  const [dueDate, setDueDate] = useState("");
+
+  useEffect(() => {
+    const fetchAssignmentCount = async () => {
+      const token = localStorage.getItem("token");
+      if (!token || !user?.userId) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/homework`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setAssignments(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(
+            error.response?.data.message || "Failed to fetch assignments",
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAssignmentCount();
+  }, []);
+
+  useEffect(() => {
+    const getGradedAssignments = async () => {
+      const token = localStorage.getItem("token");
+      if (!token || !user?.userId) {
+        toast.error("Invalid token. Please login");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/homework/graded-assignments`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setGradedAssignments(response.data);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(
+            error.response?.data.message || "Failed to fetch assignments",
+          );
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    getGradedAssignments();
+  }, []);
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const response = await api.get("/classes", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = response.data;
+        setClasses(Array.isArray(data) ? data : (data?.classes ?? []));
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(
+            error.response?.data?.message || "Failed to fetch classes",
+          );
+        }
+      }
+    };
+    fetchClasses();
+  }, []);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const response = await api.get("/subjects", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = response.data;
+        setSubjects(Array.isArray(data) ? data : data?.subjects ?? []);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data?.message || "Failed to fetch subjects");
+        }
+      }
+    };
+
+    const fetchTerms = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const response = await api.get("/terms", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = response.data;
+        setTerms(Array.isArray(data) ? data : data?.terms ?? []);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data?.message || "Failed to fetch terms");
+        }
+      }
+    };
+
+    fetchSubjects();
+    fetchTerms();
+  }, []);
+
+  const postAssingment = async () => {
+    const token = localStorage.getItem("token");
+    if (!token || !user?.userId) {
+      toast.error("Invalid token. Please login");
+      return;
+    }
+
+    if (!title || !description || !selectedClass || !selectedSubject || !selectedTerm || !dueDate) {
+      toast.error("Please fill in all assignment fields");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await api.post<Assignment>(
+        `/homework`,
+        {
+          title,
+          description,
+          classId: selectedClass,
+          subjectId: selectedSubject,
+          termId: selectedTerm,
+          dueDate,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      setAssignments((assignmentList) => [response.data, ...assignmentList]);
+      setTitle("");
+      setDescription("");
+      setSelectedClass("");
+      setSelectedSubject("");
+      setSelectedTerm("");
+      setDueDate("");
+      toast.success("Assignment posted successfully");
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error(
+          error.response?.data.message || "Failed to post assignment",
+        );
+      } else {
+        toast.error("Failed to post assignment");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getClassName = (classId: string) =>
+    classes.find((classItem) => classItem.id === classId)?.name ?? "Class";
+
+  const getSubjectName = (subjectId: string) =>
+    subjects.find((subject) => subject.id === subjectId)?.name ?? "Subject";
+
+  const getTermName = (termId: string) =>
+    terms.find((term) => term.id === termId)?.name ?? "Term";
+
+  const formatDueDate = (dateValue: string) => {
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return "Due date unavailable";
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -41,16 +296,17 @@ const TeacherAssignments = () => {
               <div className="col-span-12 lg:col-span-8 grid grid-cols-3 gap-6">
                 <div className="bg-card p-6 rounded-lg shadow-sm border border-outline-variant/10">
                   <div className="w-12 h-12 bg-primary-container/30 rounded-2xl flex items-center justify-center text-primary mb-4">
-                    <ClipboardClock 
+                    <ClipboardClock
                       className="material-symbols-outlined"
                       data-icon="pending_actions"
                     />
-
                   </div>
                   <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">
                     Active
                   </p>
-                  <p className="text-3xl font-extrabold">12</p>
+                  <p className="text-3xl font-extrabold">
+                    {assignments.length}
+                  </p>
                 </div>
                 <div className="bg-card p-6 rounded-lg shadow-sm border border-outline-variant/10">
                   <div className="w-12 h-12 bg-tertiary-container/30 rounded-2xl flex items-center justify-center text-tertiary mb-4">
@@ -58,12 +314,13 @@ const TeacherAssignments = () => {
                       className="material-symbols-outlined"
                       data-icon="done_all"
                     />
-                    
                   </div>
                   <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">
                     Completed
                   </p>
-                  <p className="text-3xl font-extrabold">48</p>
+                  <p className="text-3xl font-extrabold">
+                    {gradedAssignments.length}
+                  </p>
                 </div>
                 <div className="bg-card p-6 rounded-lg shadow-sm border border-outline-variant/10">
                   <div className="w-12 h-12 bg-secondary rounded-2xl flex items-center text-muted-foreground justify-center mb-4">
@@ -88,9 +345,20 @@ const TeacherAssignments = () => {
                       Title
                     </label>
                     <input
-                      className="w-full bg-secondary border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20"
+                      className="w-full bg-secondary border-none rounded-md py-3 px-4 focus:ring-2 focus:ring-primary/20"
                       placeholder="e.g. Victorian Poetry Analysis"
                       type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
+                    <label className="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">
+                      Description
+                    </label>
+                    <textarea
+                      className="w-full bg-secondary border-none rounded-md py-3 px-4 focus:ring-2 focus:ring-primary/20 resize-none"
+                      placeholder="e.g. Victorian Poetry Analysis"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -98,9 +366,51 @@ const TeacherAssignments = () => {
                       <label className="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">
                         Class
                       </label>
-                      <select className="w-full bg-secondary border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20">
-                        <option>10-A Literature</option>
-                        <option>12-C Humanities</option>
+                      <select
+                        className="w-full bg-secondary border-none rounded-md py-3 px-4 focus:ring-2 focus:ring-primary/20"
+                        value={selectedClass}
+                        onChange={(e) => setSelectedClass(e.target.value)}
+                      >
+                        <option value="">All Classes</option>
+                        {classes.map((classItem) => (
+                          <option key={classItem.id} value={classItem.id}>
+                            {classItem.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">
+                        Subject
+                      </label>
+                      <select
+                        className="w-full bg-secondary border-none rounded-md py-3 px-4 focus:ring-2 focus:ring-primary/20"
+                        value={selectedSubject}
+                        onChange={(e) => setSelectedSubject(e.target.value)}
+                      >
+                        <option value="">Select Subject</option>
+                        {subjects.map((subject) => (
+                          <option key={subject.id} value={subject.id}>
+                            {subject.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">
+                        Term
+                      </label>
+                      <select
+                        className="w-full bg-secondary border-none rounded-md py-3 px-4 focus:ring-2 focus:ring-primary/20"
+                        value={selectedTerm}
+                        onChange={(e) => setSelectedTerm(e.target.value)}
+                      >
+                        <option value="">Select Term</option>
+                        {terms.map((term) => (
+                          <option key={term.id} value={term.id}>
+                            {term.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div className="space-y-1">
@@ -108,31 +418,42 @@ const TeacherAssignments = () => {
                         Due Date
                       </label>
                       <input
-                        className="w-full bg-secondary border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20"
+                        className="w-full bg-secondary border-none rounded-md py-3 px-4 focus:ring-2 focus:ring-primary/20"
                         type="date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
                       />
                     </div>
                   </div>
-                  <button className="w-full py-3 mt-2 primary-gradient text-on-primary rounded-xl font-bold flex items-center justify-center gap-2">
+                  <button
+                    onClick={postAssingment}
+                    className="w-full py-3 mt-2 primary-gradient text-on-primary rounded-xl font-bold flex items-center justify-center gap-2"
+                  >
                     <Rocket
                       className="material-symbols-outlined text-lg"
                       data-icon="rocket_launch"
                     />
-
-                    Post Assignment
+                    {loading ? (
+                      <>
+                        <ClipLoader color="#fff" size={20} />
+                      </>
+                    ) : (
+                      "Post Assignment"
+                    )}
                   </button>
                 </div>
               </div>
             </div>
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-xl md:text-2xl font-bold">Recent Assignments</h3>
+              <h3 className="text-xl md:text-2xl font-bold">
+                Recent Assignments
+              </h3>
               <div className="flex gap-4">
                 <button className="flex items-center gap-2 px-4 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-highest transition-colors">
                   <ListFilter
                     className="material-symbols-outlined text-lg"
                     data-icon="filter_list"
                   />
-                   
                   Filter
                 </button>
                 <button className="flex items-center gap-2 px-4 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-highest transition-colors">
@@ -140,227 +461,77 @@ const TeacherAssignments = () => {
                     className="material-symbols-outlined text-lg"
                     data-icon="sort"
                   />
-                  
                   Sort
                 </button>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4">
-              <div className="group bg-card p-6 rounded-lg flex items-center gap-8 hover:shadow-xl hover:shadow-teal-900/5 transition-all duration-300 border border-transparent hover:border-primary/10">
-                <div className="shrink-0 w-10 h-10 md:w-20 md:h-20 rounded-3xl bg-primary-container/20 flex flex-col items-center justify-center text-primary">
-                  <span className="text-sm md:text-xl font-black">24</span>
-                  <span className="text-[10px] uppercase font-bold tracking-tighter">
-                    Oct
-                  </span>
+              {assignments.length === 0 ? (
+                <div className="rounded-lg border border-outline-variant/10 bg-card p-6 text-sm text-on-surface-variant">
+                  No assignments found yet. Post one from the form above to see it here.
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="px-3 py-1 bg-secondary text-on-secondary-container  text-[10px] font-bold rounded-full uppercase tracking-wider">
-                      Literature
-                    </span>
-                    <span className="text-on-surface-variant text-sm font-medium">
-                      ClassName 10-A
-                    </span>
-                  </div>
-                  <h4 className="text-md md:text-xl font-bold text-on-surface">
-                    Modernist Poetry Reflection
-                  </h4>
-                  <p className="text-on-surface-variant text-sm mt-1">
-                    Due in 2 days •{" "}
-                    <span className="text-primary font-semibold">Priority</span>
-                  </p>
-                </div>
-                <div className="hidden md:flex flex-col items-end gap-2 pr-8 border-r border-outline-variant/20">
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase font-bold text-on-surface-variant/60 tracking-widest">
-                        Submissions
+              ) : (
+                assignments.map((assignment) => (
+                  <div
+                    key={assignment.id}
+                    className="group flex flex-col gap-4 rounded-lg border border-transparent bg-card p-4 transition-all duration-300 hover:border-primary/10 hover:shadow-xl hover:shadow-teal-900/5 sm:flex-row sm:items-center sm:gap-8 sm:p-6"
+                  >
+                    <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:justify-center">
+                      <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-primary-container/20 text-primary sm:h-20 sm:w-20 sm:rounded-3xl">
+                        <span className="text-lg font-black sm:text-xl">
+                          {formatDueDate(assignment.dueDate).split(" ")[1] ?? "--"}
+                        </span>
+                        <span className="text-[9px] uppercase font-bold tracking-tighter sm:text-[10px]">
+                          {formatDueDate(assignment.dueDate).split(" ")[0] ?? "--"}
+                        </span>
+                      </div>
+                      <div className="sm:hidden">
+                        <p className="text-xs font-bold uppercase tracking-widest text-primary">
+                          Due {formatDueDate(assignment.dueDate)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex flex-wrap items-center gap-2 sm:mb-1 sm:gap-3">
+                        <span className="rounded-full bg-secondary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-on-secondary-container">
+                          {getSubjectName(assignment.subjectId)}
+                        </span>
+                        <span className="text-xs font-medium text-on-surface-variant sm:text-sm">
+                          {getClassName(assignment.classId)}
+                        </span>
+                        <span className="text-xs font-medium text-on-surface-variant sm:text-sm">
+                          {getTermName(assignment.termId)}
+                        </span>
+                      </div>
+                      <h4 className="text-base font-bold text-on-surface sm:text-md md:text-xl">
+                        {assignment.title}
+                      </h4>
+                      <p className="mt-1 line-clamp-2 text-sm text-on-surface-variant">
+                        {assignment.description}
                       </p>
-                      <p className="text-lg font-bold">28 / 32</p>
-                    </div>
-                    <div className="w-16 h-16 relative">
-                      <svg className="w-full h-full" viewBox="0 0 36 36">
-                        <circle
-                          className="stroke-secondary"
-                          cx="18"
-                          cy="18"
-                          fill="none"
-                          r="16"
-                          stroke-width="3"
-                        ></circle>
-                        <circle
-                          className="stroke-primary"
-                          cx="18"
-                          cy="18"
-                          fill="none"
-                          r="16"
-                          stroke-dasharray="87.5 100"
-                          stroke-linecap="round"
-                          stroke-width="3"
-                        ></circle>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col md:flex-row items-center gap-2">
-                  <button className="p-3 bg-secondary text-on-surface-variant rounded-2xl hover:bg-primary hover:text-white transition-all">
-                    <Edit
-                      className="material-symbols-outlined"
-                      data-icon="edit"
-                    />
-                     
-                  </button>
-                  <button className="p-3 bg-secondary text-on-surface-variant rounded-2xl hover:bg-tertiary hover:text-white transition-all">
-                    <Eye
-                      className="material-symbols-outlined"
-                      data-icon="visibility"
-                    />
-                  </button>
-                </div>
-              </div>
-              <div className="group bg-card p-6 rounded-lg flex items-center gap-8 hover:shadow-xl hover:shadow-teal-900/5 transition-all duration-300 border border-transparent hover:border-primary/10">
-                <div className="flex-shrink-0 w-20 h-20 rounded-3xl bg-tertiary-container/20 flex flex-col items-center justify-center text-tertiary">
-                  <span className="text-xl font-black">28</span>
-                  <span className="text-[10px] uppercase font-bold tracking-tighter">
-                    Oct
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="px-3 py-1 bg-secondary text-on-secondary-container text-[10px] font-bold rounded-full uppercase tracking-wider">
-                      Social Sciences
-                    </span>
-                    <span className="text-on-surface-variant text-sm font-medium">
-                      ClassName 12-C
-                    </span>
-                  </div>
-                  <h4 className="text-xl font-bold text-on-surface">
-                    Post-War Economics Thesis
-                  </h4>
-                  <p className="text-on-surface-variant text-sm mt-1">
-                    Due in 6 days • Draft Stage
-                  </p>
-                </div>
-                <div className="hidden md:flex flex-col items-end gap-2 pr-8 border-r border-outline-variant/20">
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase font-bold text-on-surface-variant/60 tracking-widest">
-                        Submissions
+                      <p className="mt-2 hidden text-sm text-on-surface-variant sm:block">
+                        Due {formatDueDate(assignment.dueDate)}
                       </p>
-                      <p className="text-lg font-bold">12 / 30</p>
                     </div>
-                    <div className="w-16 h-16 relative">
-                      <svg className="w-full h-full" viewBox="0 0 36 36">
-                        <circle
-                          className="stroke-secondary"
-                          cx="18"
-                          cy="18"
-                          fill="none"
-                          r="16"
-                          stroke-width="3"
-                        ></circle>
-                        <circle
-                          className="stroke-tertiary"
-                          cx="18"
-                          cy="18"
-                          fill="none"
-                          r="16"
-                          stroke-dasharray="40 100"
-                          stroke-linecap="round"
-                          stroke-width="3"
-                        ></circle>
-                      </svg>
+                    <div className="flex items-center justify-between gap-3 sm:hidden">
+                      <button className="flex-1 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-on-surface-variant transition-all hover:bg-primary hover:text-white">
+                        Edit
+                      </button>
+                      <button className="flex-1 rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-on-surface-variant transition-all hover:bg-tertiary hover:text-white">
+                        View
+                      </button>
+                    </div>
+                    <div className="hidden items-center gap-2 sm:flex">
+                      <button className="rounded-2xl bg-secondary p-3 text-on-surface-variant transition-all hover:bg-primary hover:text-white">
+                        <Edit className="material-symbols-outlined" data-icon="edit" />
+                      </button>
+                      <button className="rounded-2xl bg-secondary p-3 text-on-surface-variant transition-all hover:bg-tertiary hover:text-white">
+                        <Eye className="material-symbols-outlined" data-icon="visibility" />
+                      </button>
                     </div>
                   </div>
-                </div>
-               <div className="flex items-center gap-2">
-                  <button className="p-3 bg-secondary text-on-surface-variant rounded-2xl hover:bg-primary hover:text-white transition-all">
-                    <Edit
-                      className="material-symbols-outlined"
-                      data-icon="edit"
-                    />
-                     
-                  </button>
-                  <button className="p-3 bg-secondary text-on-surface-variant rounded-2xl hover:bg-tertiary hover:text-white transition-all">
-                    <Eye
-                      className="material-symbols-outlined"
-                      data-icon="visibility"
-                    />
-                  </button>
-                </div>
-              </div>
-              <div className="group bg-card p-6 rounded-lg flex items-center gap-8 hover:shadow-xl hover:shadow-teal-900/5 transition-all duration-300 border border-transparent hover:border-primary/10 opacity-75">
-                <div className="flex-shrink-0 w-20 h-20 rounded-3xl bg-secondary flex flex-col items-center justify-center text-on-surface-variant">
-                  <span className="text-xl font-black">15</span>
-                  <span className="text-[10px] uppercase font-bold tracking-tighter">
-                    Oct
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="px-3 py-1 bg-secondary text-on-surface-variant text-[10px] font-bold rounded-full uppercase tracking-wider">
-                      Literature
-                    </span>
-                    <span className="text-on-surface-variant text-sm font-medium">
-                      ClassName 10-A
-                    </span>
-                  </div>
-                  <h4 className="text-xl font-bold text-on-surface line-through decoration-primary/30">
-                    Grammar Basics Review
-                  </h4>
-                  <p className="text-on-surface-variant text-sm mt-1">
-                    Closed 9 days ago •{" "}
-                    <span className="text-error font-semibold">Graded</span>
-                  </p>
-                </div>
-                <div className="hidden md:flex flex-col items-end gap-2 pr-8 border-r border-outline-variant/20">
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase font-bold text-on-surface-variant/60 tracking-widest">
-                        Submissions
-                      </p>
-                      <p className="text-lg font-bold">32 / 32</p>
-                    </div>
-                    <div className="w-16 h-16 relative">
-                      <svg className="w-full h-full" viewBox="0 0 36 36">
-                        <circle
-                          className="stroke-secondary"
-                          cx="18"
-                          cy="18"
-                          fill="none"
-                          r="16"
-                          stroke-width="3"
-                        ></circle>
-                        <circle
-                          className="stroke-outline-variant"
-                          cx="18"
-                          cy="18"
-                          fill="none"
-                          r="16"
-                          stroke-dasharray="100 100"
-                          stroke-linecap="round"
-                          stroke-width="3"
-                        ></circle>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-               <div className="flex items-center gap-2">
-                  <button className="p-3 bg-secondary text-on-surface-variant rounded-2xl hover:bg-primary hover:text-white transition-all">
-                    <Edit
-                      className="material-symbols-outlined"
-                      data-icon="edit"
-                    />
-                     
-                  </button>
-                  <button className="p-3 bg-secondary text-on-surface-variant rounded-2xl hover:bg-tertiary hover:text-white transition-all">
-                    <Eye
-                      className="material-symbols-outlined"
-                      data-icon="visibility"
-                    />
-                  </button>
-                </div>
-              </div>
+                ))
+              )}
             </div>
             <div className="mt-16 grid grid-cols-12 gap-8 items-start">
               <div className="col-span-12 lg:col-span-5 relative overflow-hidden rounded-[3rem] h-[400px]">
@@ -380,8 +551,8 @@ const TeacherAssignments = () => {
                 </div>
               </div>
               <div className="col-span-12 lg:col-span-7 bg-primary-container/10 rounded-[3rem] p-12 border border-primary-container/20">
-                <h4 className="text-3xl font-extrabold mb-6">
-                  Upcoming ClassName Schedule
+                  <h4 className="text-3xl font-extrabold mb-6">
+                  Upcoming Class Schedule
                 </h4>
                 <div className="space-y-6">
                   <div className="flex items-center gap-6 p-4 rounded-3xl hover:bg-white/50 transition-all cursor-pointer">
