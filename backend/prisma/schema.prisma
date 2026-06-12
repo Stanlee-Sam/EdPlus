@@ -1,9 +1,358 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated/prisma/client.js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model School {
+  id                   String                @id @default(uuid())
+  name                 String
+  location             String
+  contactEmail         String
+  contactPhone         String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  deletedAt            DateTime?
+  isDeleted            Boolean               @default(false)
+  principalId          String?               @unique
+  announcements        Announcement[]
+  attendance           Attendance[]
+  classes              Class[]
+  feeStructures        FeeStructure[]
+  homework             Homework[]
+  levels               Level[]
+  notifications        Notification[]
+  payments             Payment[]
+  results              Result[]
+  principal            User?                 @relation("SchoolPrincipal", fields: [principalId], references: [id])
+  students             Student[]
+  subjects             Subject[]
+  teacherClassSubjects TeacherClassSubject[]
+  terms                Term[]
+  termSummaries        TermSummary[]
+  users                User[]
+}
+
+model User {
+  id                   String                @id @default(uuid())
+  name                 String
+  email                String                @unique
+  phone                String
+  password             String
+  role                 Role                  @default(PARENT)
+  schoolId             String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  announcements        Announcement[]
+  attendance           Attendance[]
+  classTeacher         Class?
+  homework             Homework[]
+  notifications        Notification[]
+  payments             Payment[]
+  principalOf          School?               @relation("SchoolPrincipal")
+  parentLinks          StudentParent[]
+  teacherClassSubjects TeacherClassSubject[]
+  school               School?               @relation(fields: [schoolId], references: [id])
+}
+
+model Class {
+  id             String                @id @default(uuid())
+  name           String
+  classTeacherId String                @unique
+  schoolId       String
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  deletedAt      DateTime?
+  isDeleted      Boolean               @default(false)
+  levelId        String
+  announcements  Announcement[]
+  classTeacher   User                  @relation(fields: [classTeacherId], references: [id])
+  level          Level                 @relation(fields: [levelId], references: [id])
+  school         School                @relation(fields: [schoolId], references: [id])
+  homework       Homework[]
+  students       Student[]
+  teachers       TeacherClassSubject[]
+}
+
+model Level {
+  id            String         @id @default(uuid())
+  name          String
+  order         Int
+  schoolId      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+  isDeleted     Boolean        @default(false)
+  classes       Class[]
+  feeStructures FeeStructure[]
+  school        School         @relation(fields: [schoolId], references: [id])
+
+  @@unique([schoolId, name])
+  @@unique([schoolId, order])
+}
+
+model Student {
+  id              String               @id @default(uuid())
+  name            String
+  admissionNumber String               @unique
+  classId         String
+  schoolId        String
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  deletedAt       DateTime?
+  isDeleted       Boolean              @default(false)
+  attendance      Attendance[]
+  submissions     HomeworkSubmission[]
+  payments        Payment[]
+  results         Result[]
+  class           Class                @relation(fields: [classId], references: [id])
+  school          School               @relation(fields: [schoolId], references: [id])
+  parents         StudentParent[]
+  termSummaries   TermSummary[]
+}
+
+model StudentParent {
+  id               String    @id @default(uuid())
+  studentId        String
+  parentId         String
+  relationshipType String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+  isDeleted        Boolean   @default(false)
+  parent           User      @relation(fields: [parentId], references: [id])
+  student          Student   @relation(fields: [studentId], references: [id])
+}
+
+model Subject {
+  id                   String                @id @default(uuid())
+  name                 String
+  schoolId             String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  deletedAt            DateTime?
+  isDeleted            Boolean               @default(false)
+  homework             Homework[]
+  results              Result[]
+  school               School                @relation(fields: [schoolId], references: [id])
+  teacherClassSubjects TeacherClassSubject[]
+}
+
+model TeacherClassSubject {
+  id        String    @id @default(uuid())
+  teacherId String
+  classId   String
+  subjectId String
+  schoolId  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  isDeleted Boolean   @default(false)
+  results   Result[]
+  class     Class     @relation(fields: [classId], references: [id])
+  school    School    @relation(fields: [schoolId], references: [id])
+  subject   Subject   @relation(fields: [subjectId], references: [id])
+  teacher   User      @relation(fields: [teacherId], references: [id])
+
+  @@unique([teacherId, classId, subjectId])
+}
+
+model Term {
+  id            String         @id @default(uuid())
+  name          String
+  startDate     DateTime
+  endDate       DateTime
+  schoolId      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+  isDeleted     Boolean        @default(false)
+  attendance    Attendance[]
+  feeStructures FeeStructure[]
+  homework      Homework[]
+  payments      Payment[]
+  results       Result[]
+  school        School         @relation(fields: [schoolId], references: [id])
+  termSummaries TermSummary[]
+}
+
+model Homework {
+  id          String               @id @default(uuid())
+  title       String
+  description String
+  dueDate     DateTime
+  classId     String
+  teacherId   String
+  subjectId   String
+  termId      String
+  schoolId    String
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  deletedAt   DateTime?
+  isDeleted   Boolean              @default(false)
+  class       Class                @relation(fields: [classId], references: [id])
+  school      School               @relation(fields: [schoolId], references: [id])
+  subject     Subject              @relation(fields: [subjectId], references: [id])
+  teacher     User                 @relation(fields: [teacherId], references: [id])
+  term        Term                 @relation(fields: [termId], references: [id])
+  submissions HomeworkSubmission[]
+}
+
+model HomeworkSubmission {
+  id         String         @id @default(uuid())
+  homeworkId String
+  studentId  String
+  status     HomeworkStatus @default(incomplete)
+  markedAt   DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  deletedAt  DateTime?
+  isDeleted  Boolean        @default(false)
+  homework   Homework       @relation(fields: [homeworkId], references: [id])
+  student    Student        @relation(fields: [studentId], references: [id])
+
+  @@unique([homeworkId, studentId])
+}
+
+model Attendance {
+  id         String           @id @default(uuid())
+  studentId  String
+  date       DateTime
+  status     AttendanceStatus
+  recordedBy String
+  termId     String
+  schoolId   String
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  deletedAt  DateTime?
+  isDeleted  Boolean          @default(false)
+  teacher    User             @relation(fields: [recordedBy], references: [id])
+  school     School           @relation(fields: [schoolId], references: [id])
+  student    Student          @relation(fields: [studentId], references: [id])
+  term       Term             @relation(fields: [termId], references: [id])
+
+  @@unique([studentId, date, termId])
+}
+
+model Result {
+  id                    String              @id @default(uuid())
+  score                 Int
+  grade                 Grade
+  studentId             String
+  termId                String
+  schoolId              String
+  teacherClassSubjectId String
+  subjectId             String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  deletedAt             DateTime?
+  isDeleted             Boolean             @default(false)
+  school                School              @relation(fields: [schoolId], references: [id])
+  student               Student             @relation(fields: [studentId], references: [id])
+  subject               Subject             @relation(fields: [subjectId], references: [id])
+  teacherClassSubject   TeacherClassSubject @relation(fields: [teacherClassSubjectId], references: [id])
+  term                  Term                @relation(fields: [termId], references: [id])
+
+  @@unique([studentId, termId, teacherClassSubjectId])
+}
+
+model TermSummary {
+  id         String    @id @default(uuid())
+  studentId  String
+  termId     String
+  totalScore Int
+  meanScore  Float
+  meanGrade  Grade
+  schoolId   String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  isDeleted  Boolean   @default(false)
+  school     School    @relation(fields: [schoolId], references: [id])
+  student    Student   @relation(fields: [studentId], references: [id])
+  term       Term      @relation(fields: [termId], references: [id])
+
+  @@unique([termId, studentId])
+}
+
+model FeeStructure {
+  id        String    @id @default(uuid())
+  amount    Int
+  termId    String
+  schoolId  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  levelId   String
+  deletedAt DateTime?
+  isDeleted Boolean   @default(false)
+  feeItems  FeeItem[]
+  level     Level     @relation(fields: [levelId], references: [id])
+  school    School    @relation(fields: [schoolId], references: [id])
+  term      Term      @relation(fields: [termId], references: [id])
+}
+
+model FeeItem {
+  id             String       @id @default(uuid())
+  name           String
+  amount         Int
+  feeStructureId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  isDeleted      Boolean      @default(false)
+  feeStructure   FeeStructure @relation(fields: [feeStructureId], references: [id])
+}
+
+model Payment {
+  id           String        @id @default(uuid())
+  amount       Int
+  date         DateTime
+  recordedBy   String
+  studentId    String
+  termId       String
+  schoolId     String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  method       PaymentMethod
+  deletedAt    DateTime?
+  isDeleted    Boolean       @default(false)
+  financeAdmin User          @relation(fields: [recordedBy], references: [id])
+  school       School        @relation(fields: [schoolId], references: [id])
+  student      Student       @relation(fields: [studentId], references: [id])
+  term         Term          @relation(fields: [termId], references: [id])
+}
+
+model Announcement {
+  id        String    @id @default(uuid())
+  title     String
+  content   String
+  createdBy String
+  classId   String?
+  schoolId  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  isDeleted Boolean   @default(false)
+  class     Class?    @relation(fields: [classId], references: [id])
+  announcer User      @relation(fields: [createdBy], references: [id])
+  school    School    @relation(fields: [schoolId], references: [id])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  message   String
+  isRead    Boolean   @default(false)
+  userId    String
+  schoolId  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  isDeleted Boolean   @default(false)
+  school    School    @relation(fields: [schoolId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 }
 
 enum Role {
@@ -36,399 +385,4 @@ enum PaymentMethod {
   CASH
   MPESA
   BANK
-}
-
-model School {
-  id           String @id @default(uuid())
-  name         String
-  location     String
-  contactEmail String
-  contactPhone String
-  isDeleted Boolean @default(false)
-
-  users                User[]
-  classes              Class[]
-  levels               Level[]
-  subjects             Subject[]
-  students             Student[]
-  terms                Term[]
-  teacherClassSubjects TeacherClassSubject[]
-  homework             Homework[]
-  attendance           Attendance[]
-  results              Result[]
-  feeStructures        FeeStructure[]
-  payments             Payment[]
-  announcements        Announcement[]
-  notifications        Notification[]
-  termSummaries        TermSummary[]
-
-  principalId String? @unique
-  principal   User?   @relation("SchoolPrincipal", fields: [principalId], references: [id])
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String @unique
-  phone    String
-  password String
-  role     Role @default(PARENT)
-
-  schoolId String?
-  school   School? @relation(fields: [schoolId], references: [id])
-
-  parentLinks          StudentParent[]
-  classTeacher         Class?
-  homework             Homework[]
-  attendance           Attendance[]
-  payments             Payment[]
-  announcements        Announcement[]
-  notifications        Notification[]
-  teacherClassSubjects TeacherClassSubject[]
-  principalOf          School?               @relation("SchoolPrincipal")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Class {
-  id             String @id @default(uuid())
-  name           String
-  classTeacherId String @unique
-  classTeacher   User   @relation(fields: [classTeacherId], references: [id])
-  schoolId       String
-  school         School @relation(fields: [schoolId], references: [id])
-  isDeleted   Boolean @default(false)
-  levelId     String
-  level       Level  @relation(fields: [levelId], references: [id])
-
-  students      Student[]
-  homework      Homework[]
-  teachers      TeacherClassSubject[]
-  announcements Announcement[]
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Level {
-  id       String @id @default(uuid())
-  name     String
-  order    Int
-  isDeleted Boolean @default(false)
-
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id])
-
-  classes       Class[]
-  feeStructures FeeStructure[]
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([schoolId, name])
-  @@unique([schoolId, order])
-}
-
-model Student {
-  id              String @id @default(uuid())
-  name            String
-  admissionNumber String @unique
-  isDeleted Boolean @default(false)
-
-  classId  String
-  class    Class  @relation(fields: [classId], references: [id])
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id])
-
-  parents       StudentParent[]
-  submissions   HomeworkSubmission[]
-  attendance    Attendance[]
-  results       Result[]
-  payments      Payment[]
-  termSummaries TermSummary[]
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model StudentParent {
-  id               String  @id @default(uuid())
-  studentId        String
-  student          Student @relation(fields: [studentId], references: [id])
-  parentId         String
-  parent           User    @relation(fields: [parentId], references: [id])
-  relationshipType String
-  isDeleted        Boolean @default(false)
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Subject {
-  id       String @id @default(uuid())
-  name     String
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id])
-  isDeleted Boolean @default(false)
-
-  homework             Homework[]
-  teacherClassSubjects TeacherClassSubject[]
-  results              Result[]
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model TeacherClassSubject {
-  id        String  @id @default(uuid())
-  teacherId String
-  teacher   User    @relation(fields: [teacherId], references: [id])
-  classId   String
-  class     Class   @relation(fields: [classId], references: [id])
-  subjectId String
-  subject   Subject @relation(fields: [subjectId], references: [id])
-  schoolId  String
-  school    School  @relation(fields: [schoolId], references: [id])
-  isDeleted Boolean @default(false)
-
-
-  results Result[]
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([teacherId, classId, subjectId])
-}
-
-model Term {
-  id        String   @id @default(uuid())
-  name      String
-  startDate DateTime
-  endDate   DateTime
-  isDeleted Boolean @default(false)
-
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id])
-
-  homework      Homework[]
-  attendance    Attendance[]
-  results       Result[]
-  feeStructures FeeStructure[]
-  payments      Payment[]
-  termSummaries TermSummary[]
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Homework {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  dueDate     DateTime
-  isDeleted   Boolean @default(false)
-
-  classId   String
-  class     Class   @relation(fields: [classId], references: [id])
-  teacherId String
-  teacher   User    @relation(fields: [teacherId], references: [id])
-  subjectId String
-  subject   Subject @relation(fields: [subjectId], references: [id])
-  termId    String
-  term      Term    @relation(fields: [termId], references: [id])
-  schoolId  String
-  school    School  @relation(fields: [schoolId], references: [id])
-
-  submissions HomeworkSubmission[]
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model HomeworkSubmission {
-  id         String         @id @default(uuid())
-  homeworkId String
-  homework   Homework       @relation(fields: [homeworkId], references: [id])
-  studentId  String
-  student    Student        @relation(fields: [studentId], references: [id])
-  status     HomeworkStatus @default(incomplete)
-  markedAt   DateTime?
-  isDeleted  Boolean        @default(false)
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([homeworkId, studentId])
-}
-
-model Attendance {
-  id         String           @id @default(uuid())
-  studentId  String
-  student    Student          @relation(fields: [studentId], references: [id])
-  date       DateTime
-  status     AttendanceStatus
-  recordedBy String
-  teacher    User             @relation(fields: [recordedBy], references: [id])
-  termId     String
-  term       Term             @relation(fields: [termId], references: [id])
-  schoolId   String
-  school     School           @relation(fields: [schoolId], references: [id])
-  isDeleted  Boolean @default(false)
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([studentId, date, termId])
-}
-
-model Result {
-  id    String @id @default(uuid())
-  score Int
-  grade Grade
-  isDeleted Boolean @default(false)
-
-  studentId              String
-  student                Student             @relation(fields: [studentId], references: [id])
-  termId                 String
-  term                   Term                @relation(fields: [termId], references: [id])
-  schoolId               String
-  school                 School              @relation(fields: [schoolId], references: [id])
-  teacherClassSubjectId String
-  teacherClassSubject   TeacherClassSubject @relation(fields: [teacherClassSubjectId], references: [id])
-  subjectId              String
-  subject                Subject             @relation(fields: [subjectId], references: [id])
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([studentId, termId, teacherClassSubjectId])
-}
-
-model TermSummary {
-  id String @id @default(uuid())
-  isDeleted Boolean @default(false)
-
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id])
-
-  termId String
-  term   Term   @relation(fields: [termId], references: [id])
-
-  totalScore Int
-  meanScore  Float
-  meanGrade  Grade
-
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id])
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([termId, studentId])
-}
-
-model FeeStructure {
-  id     String @id @default(uuid())
-  amount Int
-  isDeleted Boolean @default(false)
-
-  levelId  String
-  level    Level  @relation(fields: [levelId], references: [id])
-  termId   String
-  term     Term   @relation(fields: [termId], references: [id])
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id])
-
-  feeItems FeeItem[]
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model FeeItem {
-  id String @id @default(uuid())
-
-  name   String
-  amount Int
-  isDeleted Boolean @default(false)
-
-  feeStructureId String
-  feeStructure   FeeStructure @relation(fields: [feeStructureId], references: [id])
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Payment {
-  id           String   @id @default(uuid())
-  amount       Int
-  date         DateTime
-  method       PaymentMethod
-  recordedBy   String
-  financeAdmin User     @relation(fields: [recordedBy], references: [id])
-  isDeleted Boolean @default(false)
-
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id])
-  termId    String
-  term      Term    @relation(fields: [termId], references: [id])
-  schoolId  String
-  school    School  @relation(fields: [schoolId], references: [id])
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Announcement {
-  id        String @id @default(uuid())
-  title     String
-  content   String
-  createdBy String
-  announcer User   @relation(fields: [createdBy], references: [id])
-  isDeleted Boolean @default(false)
-
-  classId  String?
-  class    Class?  @relation(fields: [classId], references: [id])
-  schoolId String
-  school   School  @relation(fields: [schoolId], references: [id])
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Notification {
-  id      String  @id @default(uuid())
-  message String
-  isRead  Boolean @default(false)
-  isDeleted Boolean @default(false)
-
-  userId   String
-  user     User   @relation(fields: [userId], references: [id])
-  schoolId String
-  school   School @relation(fields: [schoolId], references: [id])
-
-  deletedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
