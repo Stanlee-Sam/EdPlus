@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
+import EmptyState from "@/components/ui/layout/EmptyState";
 import {
   BadgeCheck,
   Calendar,
@@ -11,6 +12,7 @@ import {
   ListFilter,
   Mail,
   Phone,
+  Users,
   X,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -45,6 +47,7 @@ const TeacherStudents = () => {
   const [isMobileQuickViewOpen, setIsMobileQuickViewOpen] = useState(false);
   const [studentsStats, setStudentsStats] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  const [listLoading, setListLoading] = useState(false);
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [terms, setTerms] = useState<TermOption[]>([]);
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -120,6 +123,7 @@ const TeacherStudents = () => {
       const token = localStorage.getItem("token");
       if (!token || !user?.userId) return;
 
+      setListLoading(true);
       try {
         const response = await api.get("/tcs/teacher-students-list", {
           headers: {
@@ -139,6 +143,8 @@ const TeacherStudents = () => {
         if (axios.isAxiosError(error)) {
           toast.error(error.response?.data?.message || "Failed to fetch students list");
         }
+      } finally {
+        setListLoading(false);
       }
     };
 
@@ -338,9 +344,20 @@ const TeacherStudents = () => {
               </div>
 
               <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-[0_20px_40px_rgba(42,53,50,0.06)]">
-                {loading ? (
-                  <div className="p-6 text-sm font-medium text-on-surface-variant">Loading student data...</div>
-                ) : null}
+                {listLoading ? (
+                  <div className="p-6 text-sm font-medium text-on-surface-variant">
+                    Loading student data...
+                  </div>
+                ) : students.length === 0 ? (
+                  <div className="p-6">
+                    <EmptyState
+                      title="No students found"
+                      description="No students match the selected filters. Try clearing filters or check back once students are assigned to your classes."
+                      icon={Users}
+                    />
+                  </div>
+                ) : (
+                <>
                 <table className="hidden w-full border-collapse text-left lg:table">
                   <thead>
                     <tr className="bg-surface-container-low">
@@ -359,14 +376,7 @@ const TeacherStudents = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-container">
-                    {students.length === 0 ? (
-                      <tr>
-                        <td className="px-6 py-8 text-sm text-on-surface-variant" colSpan={6}>
-                          No students found for the selected filters.
-                        </td>
-                      </tr>
-                    ) : (
-                      students.map((student) => {
+                      {students.map((student) => {
                         const isSelected = student.id === selectedStudent?.id;
                         return (
                           <tr
@@ -411,18 +421,12 @@ const TeacherStudents = () => {
                             </td>
                           </tr>
                         );
-                      })
-                    )}
+                      })}
                   </tbody>
                 </table>
 
                 <div className="space-y-3 p-3 lg:hidden">
-                  {students.length === 0 ? (
-                    <div className="rounded-xl border border-outline-variant/10 bg-card p-4 text-sm text-on-surface-variant">
-                      No students found for the selected filters.
-                    </div>
-                  ) : (
-                    students.map((student) => (
+                    {students.map((student) => (
                       <button
                         key={student.id}
                         type="button"
@@ -443,9 +447,10 @@ const TeacherStudents = () => {
                           <span>Class {student.className}</span>
                         </div>
                       </button>
-                    ))
-                  )}
+                    ))}
                 </div>
+                </>
+                )}
               </div>
 
               {isMobileQuickViewOpen ? <div className="mt-6 overflow-hidden rounded-xl lg:hidden">{quickViewPanel}</div> : null}

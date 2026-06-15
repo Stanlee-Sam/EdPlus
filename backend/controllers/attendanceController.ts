@@ -404,8 +404,8 @@ export const getAttendancePercentage = async (req : Request, res : Response) => 
       });
 
       const classIds = [...new Set([
-        ...assignedClasses.map((assignment) => assignment.classId),
-        ...classTeacherClasses.map((classRecord) => classRecord.id),
+        ...assignedClasses.map((assignment : {classId: string}) => assignment.classId),
+        ...classTeacherClasses.map((classRecord : { id: string}) => classRecord.id),
       ])];
 
       if (classIds.length === 0) {
@@ -468,3 +468,111 @@ export const getAttendancePercentage = async (req : Request, res : Response) => 
     res.status(500).json({ message });
   }
 }
+
+export const getAttendancePerClass = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+
+    const { schoolId, role, userId } = user;
+    const parsedQuery = attendanceStatsQuerySchema.safeParse(req.query);
+    if (!parsedQuery.success) {
+      return res.status(400).json({
+        message: "Invalid query params",
+        errors: parsedQuery.error.flatten().fieldErrors,
+      });
+    }
+
+    const { date, termId } = parsedQuery.data;
+
+    const targetDate = date ?? new Date();
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    let teacherStudentRelationFilter: { is: { classId: { in: string[] } } } | null = null;
+
+    if (role === "TEACHER") {
+      const assignedClasses = await prisma.teacherClassSubject.findMany({
+        where: {
+          teacherId: userId,
+          schoolId: schoolId as string,
+          isDeleted: false,
+        },
+        select: {
+          classId: true,
+        },
+      });
+
+      const classTeacherClasses = await prisma.class.findMany({
+        where: {
+          classTeacherId: userId,
+          schoolId: schoolId as string,
+          isDeleted: false,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const classIds = [...new Set([
+        ...assignedClasses.map((assignment: { classId: string }) => assignment.classId),
+        ...classTeacherClasses.map((classRecord: { id: string }) => classRecord.id),
+      ])];
+
+      if (classIds.length === 0) {
+        return res.status(200).json([]);
+      }
+
+      teacherStudentRelationFilter = {
+        is: {
+          classId: {
+            in: classIds,
+          },
+        },
+      };
+    }
+
+    const attendanceRecords = await prisma.attendance.findMany({
+      where: {
+        isDeleted: false,
+        ...(role !== "SUPER_ADMIN" ? { schoolId: schoolId as string } : {}),
+        ...(termId ? { termId } : {}),
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+        ...(role === "TEACHER" && teacherStudentRelationFilter ? {
+          student: teacherStudentRelationFilter,
+        } : {}),
+      },
+      select: {
+        id: true,
+        studentId: true,
+        date: true,
+        status: true,
+        recordedBy: true,
+        termId: true,
+        schoolId: true,
+        createdAt: true,
+        updatedAt: true,
+
+        student: {
+          select: {
+            id: true,
+            name: true,
+            admissionNumber: true,
+            classId: true
+          },
+        },
+      },
+    });
+
+    res.status(200).json(attendanceRecords);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown Error";
+    console.error("Error fetching attendance per class", message);
+    res.status(500).json({ message });
+  }
+};

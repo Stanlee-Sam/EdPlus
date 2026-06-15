@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/ui/layout/Navbar";
 import Sidebar from "@/components/ui/layout/Sidebar";
+import EmptyState from "@/components/ui/layout/EmptyState";
 import {
   ArrowDownWideNarrow,
   CheckCheck,
@@ -47,7 +48,8 @@ type AssignmentModalMode = "view" | "edit";
 
 const TeacherAssignments = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [gradedAssignments, setGradedAssignments] = useState([]);
@@ -71,7 +73,7 @@ const TeacherAssignments = () => {
       return;
     }
 
-    setLoading(true);
+    setListLoading(true);
     try {
       const response = await api.get(`/homework`, {
         headers: {
@@ -84,7 +86,7 @@ const TeacherAssignments = () => {
         toast.error(error.response?.data.message || "Failed to fetch assignments");
       }
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   };
 
@@ -100,7 +102,6 @@ const TeacherAssignments = () => {
         return;
       }
 
-      setLoading(true);
       try {
         const response = await api.get(`/homework/graded-assignments`, {
           headers: {
@@ -115,8 +116,6 @@ const TeacherAssignments = () => {
             error.response?.data.message || "Failed to fetch assignments",
           );
         }
-      } finally {
-        setLoading(false);
       }
     };
     getGradedAssignments();
@@ -204,7 +203,7 @@ const TeacherAssignments = () => {
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       const response = await api.post<Assignment>(
@@ -241,7 +240,7 @@ const TeacherAssignments = () => {
         toast.error("Failed to post assignment");
       }
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -301,7 +300,7 @@ const TeacherAssignments = () => {
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
     try {
       await api.put(
         `/homework/${selectedAssignment.id}`,
@@ -330,7 +329,7 @@ const TeacherAssignments = () => {
         toast.error("Failed to update assignment");
       }
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -507,7 +506,7 @@ const TeacherAssignments = () => {
                       className="material-symbols-outlined text-lg"
                       data-icon="rocket_launch"
                     />
-                    {loading ? (
+                    {submitting ? (
                       <>
                         <ClipLoader color="#fff" size={20} />
                       </>
@@ -540,10 +539,16 @@ const TeacherAssignments = () => {
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4">
-              {assignments.length === 0 ? (
-                <div className="rounded-lg border border-outline-variant/10 bg-card p-6 text-sm text-on-surface-variant">
-                  No assignments found yet. Post one from the form above to see it here.
+              {listLoading ? (
+                <div className="rounded-lg bg-card p-6 text-sm font-medium text-on-surface-variant">
+                  Loading assignments...
                 </div>
+              ) : assignments.length === 0 ? (
+                <EmptyState
+                  title="No assignments yet"
+                  description="You haven't posted any assignments yet. Create one using the form above to get started."
+                  icon={ClipboardClock}
+                />
               ) : (
                 assignments.map((assignment) => (
                   <div
@@ -749,7 +754,7 @@ const TeacherAssignments = () => {
                         onClick={handleUpdateAssignment}
                         className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition-colors hover:bg-primary/90"
                       >
-                        {loading ? "Saving..." : "Save Changes"}
+                        {submitting ? "Saving..." : "Save Changes"}
                       </button>
                     ) : null}
                   </div>

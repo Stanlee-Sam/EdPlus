@@ -1,5 +1,5 @@
 import express from 'express';
-import {createAttendance, getAttendance, getAttendancePerStudent, updateAttendance, deleteAttendance, getAttendancePercentage} from '../controllers/attendanceController.js'
+import {createAttendance, getAttendance, getAttendancePerStudent, updateAttendance, deleteAttendance, getAttendancePercentage, getAttendancePerClass} from '../controllers/attendanceController.js'
 import { authenticateToken } from '../middleware/authMiddleware.js';
 import { authorizeRole } from '../middleware/roleMiddleware.js';
 
@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.get('/', authenticateToken, getAttendance)
 router.get('/stats', authenticateToken, getAttendancePercentage)
+router.get('/class', authenticateToken, getAttendancePerClass)
 router.get('/:id', authenticateToken, getAttendancePerStudent)
 router.post('/', authenticateToken, authorizeRole(['TEACHER', 'SCHOOL_ADMIN']), createAttendance)
 router.put('/:id', authenticateToken, authorizeRole(['TEACHER', 'SCHOOL_ADMIN']), updateAttendance)

@@ -313,7 +313,11 @@ const SuperAdminSchools = () => {
                 <div className="col-span-2 text-center">Status</div>
                 <div className="col-span-1 text-right">Actions</div>
               </div>
-              {schools.length === 0 ? (
+              {loading && schools.length === 0 ? (
+                <div className="p-12 text-sm font-medium text-on-surface-variant">
+                  Loading schools...
+                </div>
+              ) : schools.length === 0 ? (
                 <div className="p-12">
                   <EmptyState
                     title="No Schools registered"

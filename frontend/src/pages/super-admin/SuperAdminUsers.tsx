@@ -238,7 +238,11 @@ const SuperAdminUsers = () => {
                 <div className="col-span-1 text-center">Status</div>
                 <div className="col-span-1 text-right">Actions</div>
               </div>
-              {users.length === 0 ? (
+              {loading && users.length === 0 ? (
+                <div className="p-12 text-sm font-medium text-on-surface-variant">
+                  Loading users...
+                </div>
+              ) : users.length === 0 ? (
                 <div className="p-12">
                   <EmptyState
                     title="No Users registered"

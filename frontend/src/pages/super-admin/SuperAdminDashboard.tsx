@@ -371,7 +371,11 @@ useEffect(() => {
                   </a>
                 </div>
                 <div className="space-y-6">
-                  {schools.length === 0 ? (
+                  {loading && schools.length === 0 ? (
+                    <div className="p-12 text-sm font-medium text-on-surface-variant">
+                      Loading schools...
+                    </div>
+                  ) : schools.length === 0 ? (
                     <div className="p-12">
                       <EmptyState
                         title="No Schools registered"
